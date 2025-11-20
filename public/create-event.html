@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이벤트 만들기 - EVENT HUB</title>
+    <link rel="stylesheet" href="create-event.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1 class="page-title">📝 새 이벤트 만들기</h1>
+
+        <div class="form-section">
+            <label>이벤트 제목</label>
+            <input type="text" id="evtTitle" placeholder="이벤트 제목을 입력하세요">
+
+            <div class="row">
+                <div class="col">
+                    <label>개최 기간 (시작)</label>
+                    <input type="datetime-local" id="evtStart">
+                </div>
+                <div class="col">
+                    <label>종료 시간 (참여 마감)</label>
+                    <input type="datetime-local" id="evtEnd">
+                </div>
+            </div>
+
+            <label>이벤트 종류 선택</label>
+            <select id="evtType" onchange="handleTypeChange()">
+                <option value="">선택해주세요</option>
+                <option value="lotto">🎰 로또 이벤트</option>
+                <option value="quiz">퀴즈 대회</option>
+                <option value="custom">✏️ 직접 입력 (집계 기간 설정)</option>
+            </select>
+
+            <div id="customTypeArea" class="hidden" style="margin-top:15px; padding:15px; background:#162032; border-radius:10px; border:1px solid var(--border);">
+                <label style="color:var(--accent);">📌 이벤트 종류 이름 입력</label>
+                <input type="text" id="customTypeName" placeholder="예: 댓글 왕중왕전">
+                
+                <div class="row" style="margin-top:20px;">
+                    <div class="col">
+                        <label>집계 기간 (시작)</label>
+                        <input type="datetime-local" id="calcStart">
+                    </div>
+                    <div class="col">
+                        <label>집계 기간 (종료/발표)</label>
+                        <input type="datetime-local" id="calcEnd">
+                    </div>
+                </div>
+                <p style="font-size:0.85rem; color:#94a3b8; margin-top:5px;">* 집계 기간 동안에는 '집계 중' 상태로 표시되며, 종료 시 '종료된 이벤트'로 이동합니다.</p>
+            </div>
+
+            <div id="lottoSettingArea"></div>
+        </div>
+
+        <div id="normalPrizeArea" class="form-section">
+            <label>상품 입력 방식</label>
+            <div class="radio-group">
+                <label><input type="radio" name="prizeMode" value="rank" checked onclick="changePrizeMode('rank')"> 순위 방식</label>
+                <label><input type="radio" name="prizeMode" value="lottery" onclick="changePrizeMode('lottery')"> 당첨자 방식</label>
+            </div>
+            <div id="prizeContainer" class="prize-list"></div>
+            <button type="button" class="add-btn" onclick="addPrizeField()">+ 상품 추가하기</button>
+        </div>
+
+        <div class="form-section">
+            <label>이벤트 설명</label>
+            <textarea id="evtDesc" rows="5" placeholder="내용을 입력하세요."></textarea>
+        </div>
+
+        <div class="form-section settings-box">
+            <h3>⚙️ 설정 모음</h3>
+            <div class="setting-item"><label class="checkbox-label"><input type="checkbox" id="chkFirstCome" onchange="toggleFirstCome()"> 선착순 설정</label><input type="number" id="maxCount" class="hidden small-input" placeholder="인원 수"></div>
+            <div class="setting-item"><label class="checkbox-label"><input type="checkbox" id="chkCommentAllowed"> 💬 댓글 기능 활성화</label></div>
+            <div class="setting-item"><label class="checkbox-label"><input type="checkbox" id="chkCommentOnce"> 🚫 1인 1댓글 제한</label></div>
+        </div>
+
+        <div class="btn-group">
+            <button class="submit-btn" onclick="submitEvent()">이벤트 생성 완료</button>
+            <button class="cancel-btn" onclick="history.back()">취소</button>
+        </div>
+    </div>
+
+    <script src="event/lotto.js"></script>
+    <script src="create-event.js"></script>
+</body>
+</html>

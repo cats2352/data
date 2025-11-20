@@ -1,0 +1,146 @@
+:root {
+    --bg-color: #0f172a;
+    --card-bg: #1e293b;
+    --primary: #3b82f6;
+    --text: #f8fafc;
+    --border: #334155;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    background: var(--bg-color);
+    color: var(--text);
+    font-family: 'Pretendard', sans-serif;
+    display: flex;
+    justify-content: center;
+    margin: 0;
+    padding: 40px 20px;
+    min-height: 100vh;
+}
+
+.container {
+    width: 100%;
+    max-width: 700px;
+    background: var(--card-bg);
+    padding: 40px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    height: fit-content;
+}
+
+.page-title { text-align: center; margin-bottom: 40px; color: var(--primary); font-size: 1.8rem; }
+
+/* 폼 스타일 */
+.form-section { margin-bottom: 30px; }
+label { display: block; margin-bottom: 10px; font-weight: bold; color: #cbd5e1; font-size: 1rem; }
+
+/* ★ 입력창들 간격 넓게 수정됨 (margin-bottom: 25px) */
+input[type="text"], input[type="datetime-local"], input[type="number"], select, textarea {
+    width: 100%;
+    padding: 12px;
+    background: #0f172a;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: white;
+    font-size: 1rem;
+    outline: none;
+    margin-bottom: 25px; /* 간격 추가 */
+}
+
+input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+
+/* ★ 날짜 입력 줄 간격 수정됨 */
+.row { 
+    display: flex; 
+    gap: 20px; 
+    margin-bottom: 25px; /* 날짜와 이벤트 종류 사이 간격 */
+}
+.col { flex: 1; }
+
+/* 상품 입력 관련 */
+.radio-group { 
+    display: flex; gap: 15px; margin-bottom: 15px; 
+    background: #0f172a; padding: 12px; border-radius: 8px; 
+    flex-wrap: wrap;
+}
+.radio-group label { margin: 0; cursor: pointer; display: flex; align-items: center; gap: 5px; color:white;}
+
+.prize-item { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start; flex-wrap: wrap; }
+.prize-label { 
+    width: 100px; text-align: center; background: #334155; 
+    padding: 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; flex-shrink: 0;
+}
+.prize-input { flex: 1; margin-bottom: 0 !important; } /* 상품 입력칸은 아래 여백 제거 */
+
+.del-btn { background: #ef4444; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; }
+.add-btn { width: 100%; background: #334155; color: white; border: 1px dashed #64748b; padding: 12px; cursor: pointer; border-radius: 8px; font-weight: bold; margin-top: 10px;}
+.add-btn:hover { background: #475569; }
+
+/* 설정 박스 */
+.settings-box { background: #162032; padding: 20px; border-radius: 10px; border: 1px solid var(--border); }
+.checkbox-label { display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0; }
+.checkbox-label input { width: 20px; height: 20px; margin: 0; }
+.small-input { width: 100% !important; margin-top: 15px; margin-left: 0; }
+.hidden { display: none; }
+
+/* 하단 버튼 */
+.btn-group { display: flex; gap: 10px; margin-top: 40px; }
+.submit-btn { flex: 2; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
+.cancel-btn { flex: 1; background: #334155; color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: bold; }
+
+/* ... 기존 CSS 코드들 아래에 붙여넣기 ... */
+
+/* ★ [NEW] 날짜 선택기 커스텀 디자인 */
+input[type="datetime-local"] {
+    /* 달력 팝업을 다크 모드로 변경 (핵심!) */
+    color-scheme: dark; 
+    
+    /* 텍스트 및 배경 스타일 */
+    background-color: #1e293b; /* 조금 더 밝은 배경 */
+    color: #fff;
+    border: 1px solid #475569;
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-family: 'Pretendard', sans-serif;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s;
+    
+    /* 기본 아이콘 위치 조정 */
+    position: relative;
+}
+
+input[type="datetime-local"]:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); /* 파란색 은은한 광채 */
+}
+
+/* 달력 아이콘(시계 아이콘)을 하얀색으로 변경 */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(1); /* 색상 반전 (검정 -> 흰색) */
+    cursor: pointer;
+    opacity: 0.7;
+    transition: 0.2s;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* --- 📱 모바일 반응형 (600px 이하) --- */
+@media (max-width: 600px) {
+    .container { padding: 20px; border: none; box-shadow: none; max-width: 100%;}
+    body { padding: 0; background: var(--card-bg); }
+
+    .row { flex-direction: column; gap: 20px; margin-bottom: 30px; }
+    
+    .prize-item { background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #334155; }
+    .prize-label { width: 100%; text-align: left; background: none; padding: 0 0 5px 0; color: var(--primary); }
+    .del-btn { width: 100%; margin-top: 5px; }
+
+    .btn-group { flex-direction: column-reverse; }
+    .submit-btn, .cancel-btn { width: 100%; }
+}

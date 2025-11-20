@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 정보 - EVENT HUB</title>
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    <link rel="stylesheet" href="my-profile.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo" onclick="location.href='/'" style="cursor:pointer;">EVENT HUB</div>
+    </nav>
+
+    <div class="container profile-container">
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="avatar-circle" id="profileInitial">U</div>
+                <div class="profile-info">
+                    <h2 id="profileName">로딩 중...</h2>
+                    <div id="profileBadge"></div>
+                    <p class="join-date" id="profileDate">가입일: -</p>
+                </div>
+                <button class="logout-btn-small" onclick="logout()">로그아웃</button>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-num" id="statTotal">0</div>
+                    <div class="stat-label">참여</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-num" id="statWin" style="color:var(--accent);">0</div>
+                    <div class="stat-label">당첨</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-num" id="statTicket">0</div>
+                    <div class="stat-label">티켓</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-box">
+            <h3 class="section-title-small">🏆 나의 명예의 전당 (당첨 내역)</h3>
+            <div id="winningList" class="winning-grid">
+                </div>
+        </div>
+
+        <div class="section-box">
+            <h3 class="section-title-small">🎫 전체 참여 기록</h3>
+            <div class="history-tabs">
+                <button class="tab-btn active" onclick="filterHistory('all')">전체</button>
+                <button class="tab-btn" onclick="filterHistory('ongoing')">진행중</button>
+                <button class="tab-btn" onclick="filterHistory('ended')">종료됨</button>
+            </div>
+            <div id="historyList" class="history-list">
+                </div>
+        </div>
+
+    </div>
+
+    <script src="my-profile.js"></script>
+</body>
+</html>
