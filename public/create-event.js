@@ -21,37 +21,55 @@ window.onload = async () => {
     }
 };
 
-// [NEW] 기존 데이터 불러와서 채우기
+// ★ [NEW] UTC 시간을 로컬 시간(input datetime-local 포맷)으로 변환하는 함수
+function toLocalISOString(isoString) {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    // 로컬 시간대 오프셋을 적용하여 보정
+    const offset = date.getTimezoneOffset() * 60000;
+    const localDate = new Date(date.getTime() - offset);
+    // ISO 문자열에서 앞 16자리(YYYY-MM-DDTHH:mm)만 추출
+    return localDate.toISOString().slice(0, 16);
+}
+
+// [수정됨] 기존 데이터 불러와서 채우기
 async function loadEventData(id) {
     try {
         const res = await fetch(`/api/events/${id}`);
         const evt = await res.json();
 
-        // 기본 정보 채우기
+        // 1. 기본 정보 채우기
         document.getElementById('evtTitle').value = evt.title;
-        // 날짜 형식 변환 (datetime-local용: YYYY-MM-DDTHH:mm)
-        if(evt.startDate) document.getElementById('evtStart').value = evt.startDate.slice(0, 16);
-        if(evt.endDate) document.getElementById('evtEnd').value = evt.endDate.slice(0, 16);
+        
+        // ★ [수정됨] 날짜 형식 변환 (단순 slice 대신 로컬 시간 변환 함수 사용)
+        if(evt.startDate) document.getElementById('evtStart').value = toLocalISOString(evt.startDate);
+        if(evt.endDate) document.getElementById('evtEnd').value = toLocalISOString(evt.endDate);
         
         document.getElementById('evtType').value = evt.eventType;
         document.getElementById('evtDesc').value = evt.desc;
 
-        // 커스텀 타입 정보 채우기
+        // 2. 커스텀 타입 정보 채우기
         if (evt.eventType === 'custom') {
             document.getElementById('customTypeName').value = evt.customEventType;
-            if(evt.calcStartDate) document.getElementById('calcStart').value = evt.calcStartDate.slice(0, 16);
-            if(evt.calcEndDate) document.getElementById('calcEnd').value = evt.calcEndDate.slice(0, 16);
+            // ★ [수정됨] 여기도 로컬 시간 변환 적용
+            if(evt.calcStartDate) document.getElementById('calcStart').value = toLocalISOString(evt.calcStartDate);
+            if(evt.calcEndDate) document.getElementById('calcEnd').value = toLocalISOString(evt.calcEndDate);
         }
         
-        handleTypeChange(); // UI 갱신
+        // 3. UI 갱신 (입력창들을 먼저 그립니다)
+        handleTypeChange(); 
 
-        // 상품 목록 채우기 (일반 모드일 때만)
-        if (evt.eventType !== 'lotto') {
+        // 4. 세부 설정 값 채우기 (로또 vs 일반)
+        if (evt.eventType === 'lotto' && evt.lottoConfig) {
+            if (typeof populateLottoSettings === 'function') {
+                populateLottoSettings(evt.lottoConfig);
+            }
+        }
+        else if (evt.eventType !== 'lotto') {
             const container = document.getElementById('prizeContainer');
-            container.innerHTML = '';
+            container.innerHTML = ''; 
             
             if (evt.prizes && evt.prizes.length > 0) {
-                // 랭킹인지 추첨인지 라벨로 추측
                 if (evt.prizes[0].label.includes('당첨자')) {
                     document.querySelector('input[value="lottery"]').checked = true;
                     currentMode = 'lottery';
@@ -68,18 +86,15 @@ async function loadEventData(id) {
             }
         }
 
-        // 설정값 채우기
+        // 5. 공통 설정값 채우기
         if (evt.settings) {
             document.getElementById('chkFirstCome').checked = evt.settings.isFirstCome;
-            toggleFirstCome();
+            toggleFirstCome(); 
             if(evt.settings.isFirstCome) document.getElementById('maxCount').value = evt.settings.maxParticipants;
             
             document.getElementById('chkCommentAllowed').checked = evt.settings.isCommentAllowed;
             document.getElementById('chkCommentOnce').checked = evt.settings.isCommentOnce;
         }
-        
-        // *로또 설정값 불러오기는 UI 구조상 복잡하여 생략 (수정 시 재입력 필요 안내가 나음)
-        // 여기서는 기존 설정을 덮어쓰지 않게 주의
 
     } catch (e) {
         console.error(e);
@@ -93,31 +108,30 @@ function handleTypeChange() {
     const lottoSettingArea = document.getElementById('lottoSettingArea');
     const customTypeArea = document.getElementById('customTypeArea');
     
-    // 수정 모드일 때는 로또 설정을 함부로 초기화하지 않음 (단, 타입이 바뀌면 초기화)
     if (!isEditMode) lottoSettingArea.innerHTML = ''; 
 
     if (type === 'lotto') {
         if(normalPrizeArea) normalPrizeArea.classList.add('hidden');
         if(customTypeArea) customTypeArea.classList.add('hidden');
         
-        // 생성 모드거나, 수정 모드에서 로또를 다시 선택한 경우
         if (typeof renderLottoSettings === 'function') {
-             // 수정 모드일 때 값을 채워넣는 건 lotto.js 확장이 필요함.
-             // 현재는 폼만 렌더링 (빈 값)
-             if(!isEditMode || lottoSettingArea.innerHTML === '') renderLottoSettings();
+             if(lottoSettingArea.innerHTML === '') renderLottoSettings();
         }
     } else if (type === 'custom') {
         if(normalPrizeArea) normalPrizeArea.classList.remove('hidden');
         if(customTypeArea) customTypeArea.classList.remove('hidden');
+        if(lottoSettingArea) lottoSettingArea.innerHTML = ''; 
     } else {
         if(normalPrizeArea) normalPrizeArea.classList.remove('hidden');
         if(customTypeArea) customTypeArea.classList.add('hidden');
+        if(lottoSettingArea) lottoSettingArea.innerHTML = '';
     }
 }
 
 function changePrizeMode(mode) { 
     currentMode = mode; 
-    if(!isEditMode) resetPrizeFields(); 
+    if(!isEditMode) resetPrizeFields();
+    else reorderPrizes();
 }
 
 function resetPrizeFields() { 
@@ -182,9 +196,7 @@ async function submitEvent() {
     if (type === 'lotto') {
         try { lottoConfig = getLottoConfig(); } 
         catch (e) { 
-            // 수정 모드에서 로또 설정을 건드리지 않았다면 기존 유지 로직이 필요하지만,
-            // 현재 구현상 재입력을 유도합니다.
-            if(!isEditMode) return alert('로또 설정을 확인해주세요.'); 
+            return alert('로또 설정을 확인해주세요.'); 
         }
     } else {
         document.querySelectorAll('#prizeContainer .prize-item').forEach(item => {

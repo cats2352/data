@@ -11,11 +11,19 @@
         <div class="login-box">
             <div class="logo-large">EVENT HUB</div>
             <h2 id="authTitle" style="margin-bottom:20px; color:white;">로그인</h2>
+            
             <div class="input-group">
-                <input type="text" id="username" placeholder="아이디">
-                <input type="password" id="password" placeholder="비밀번호">
-                <input type="text" id="nickname" placeholder="닉네임" class="hidden">
+                <input type="text" id="nickname" placeholder="닉네임 (최대 10글자)">
+                <input type="password" id="password" placeholder="비밀번호 (영문+숫자+특수문자)">
             </div>
+
+            <div style="text-align:left; margin-bottom:15px; padding-left:5px;">
+                <label style="color:#94a3b8; font-size:0.9rem; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" id="rememberMe" style="width:auto; margin:0;"> 
+                    로그인 상태 유지
+                </label>
+            </div>
+
             <button class="full-btn primary" onclick="handleAuth()">확인</button>
             <div class="toggle-text" onclick="toggleAuthMode()"><span id="toggleMsg">회원가입하기</span></div>
         </div>
@@ -60,9 +68,15 @@
     
     <div id="adminModal" class="modal-overlay hidden">
         <div class="modal-box">
-            <h2>승인 대기 목록</h2>
-            <div id="pendingList"></div>
-            <button class="apply-btn" style="background:none; margin-top:10px;" onclick="closeModal('adminModal')">닫기</button>
+            <h2>👥 유저 승인 관리</h2>
+            
+            <h3 style="font-size:1rem; color:#f39c12; border-bottom:1px solid #444; padding-bottom:5px; margin-top:20px; text-align:left;">⏳ 승인 대기</h3>
+            <div id="pendingList" style="margin-bottom:20px;"></div>
+
+            <h3 style="font-size:1rem; color:#2ecc71; border-bottom:1px solid #444; padding-bottom:5px; margin-top:20px; text-align:left;">✅ 승인된 유저</h3>
+            <div id="approvedList" style="max-height:200px; overflow-y:auto;"></div>
+
+            <button class="apply-btn" style="background:none; margin-top:20px; border:1px solid #666;" onclick="closeModal('adminModal')">닫기</button>
         </div>
     </div>
 
