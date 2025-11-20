@@ -3,10 +3,10 @@ let token = localStorage.getItem('token');
 let user = localStorage.getItem('user');
 let nickname = localStorage.getItem('nickname');
 let isAdmin = localStorage.getItem('isAdmin') === 'true';
-let isLoginMode = true; 
-let allEvents = []; 
+let isLoginMode = true;
+let allEvents = [];
 
-// ★ [NEW] 이미지가 없거나 깨졌을 때 보여줄 기본 이미지 (회색 박스)
+// 기본 이미지
 const NO_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 300 160'%3E%3Crect fill='%231e293b' width='300' height='160'/%3E%3Ctext fill='%2394a3b8' x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-family='sans-serif' font-size='20'%3ENo Image%3C/text%3E%3C/svg%3E";
 
 // 시작 시 실행
@@ -96,8 +96,12 @@ function logout() { localStorage.clear(); location.reload(); }
 async function loadEvents() {
     try {
         const res = await fetch('/api/events');
+        if (!res.ok) throw new Error(`서버 에러 (${res.status})`);
+
         allEvents = await res.json();
         
+        if (!Array.isArray(allEvents)) throw new Error("데이터 형식이 올바르지 않습니다.");
+
         const activeGrid = document.getElementById('eventList');
         const calcGrid = document.getElementById('calculatingList');
         const endedGrid = document.getElementById('endedList');
@@ -117,15 +121,16 @@ async function loadEvents() {
             let status = 'active';
             let badgeHtml = '';
 
+            // 상태 분류 로직
             if (now > endDate) {
                 if (calcStart && calcEnd && now >= calcStart && now <= calcEnd) {
-                    status = 'calculating'; 
+                    status = 'calculating';
                     badgeHtml = '<div class="ended-badge" style="border-color:#f39c12; color:#f39c12;">집계 중</div>';
                 } else if (calcEnd && now > calcEnd) {
-                    status = 'ended'; 
+                    status = 'ended';
                     badgeHtml = '<div class="ended-badge">종료됨</div>';
                 } else if (!calcStart) {
-                    status = 'ended'; 
+                    status = 'ended';
                     badgeHtml = '<div class="ended-badge">종료됨</div>';
                 } else {
                      status = 'calculating';
@@ -133,7 +138,19 @@ async function loadEvents() {
                 }
             }
 
-            let adminBtn = isAdmin ? `<button class="delete-btn" onclick="deleteEvent('${evt._id}')">🗑</button>` : '';
+            const imgSrc = evt.imgUrl ? `/img/${evt.imgUrl}` : (typeof NO_IMAGE !== 'undefined' ? NO_IMAGE : '');
+            
+            // ★ [수정됨] 관리자 버튼 (수정 + 삭제)
+            let adminBtn = '';
+            if (isAdmin) {
+                adminBtn = `
+                    <div style="position:absolute; top:10px; right:10px; z-index:10; display:flex; gap:5px;">
+                        <button class="delete-btn" style="background:#3498db;" onclick="editEvent(event, '${evt._id}')">✏️</button>
+                        <button class="delete-btn" onclick="deleteEvent('${evt._id}')">🗑</button>
+                    </div>
+                `;
+            }
+            
             let cardClass = 'event-card';
             if (status === 'ended') cardClass += ' ended-card';
             
@@ -146,17 +163,18 @@ async function loadEvents() {
                 btnHtml = `<button class="apply-btn" disabled style="background:#475569; cursor:not-allowed;">마감되었습니다</button>`;
             }
 
-            // ★ [수정됨] 이미지 처리 로직 (DB에 주소가 없으면 기본 이미지 사용)
-            const imgSrc = evt.imgUrl ? `/img/${evt.imgUrl}` : NO_IMAGE;
+            const startStr = formatDateShort(evt.startDate);
+            const endStr = formatDateShort(evt.endDate);
 
             const html = `
                 <div class="${cardClass}">
                     <div style="position:relative;">
                         <img src="${imgSrc}" class="card-img" onerror="this.src='${NO_IMAGE}'">
-                        ${adminBtn} ${badgeHtml}
+                        ${adminBtn} 
+                        ${badgeHtml}
                     </div>
                     <div class="card-body">
-                        <div class="card-date">${evt.startDate.substring(0,10)} ~ ${evt.endDate.substring(0,10)}</div>
+                        <div class="card-date">${startStr} ~ ${endStr}</div>
                         <div class="card-title">${evt.title}</div>
                         <button class="info-btn" style="pointer-events:auto;" onclick="location.href='event-detail.html?id=${evt._id}'">📄 상세 정보</button>
                         <div style="pointer-events:auto;">${btnHtml}</div>
@@ -172,7 +190,11 @@ async function loadEvents() {
         if (calcGrid.innerHTML !== '') calcSection.classList.remove('hidden');
         else calcSection.classList.add('hidden');
 
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+        console.error("이벤트 로드 실패:", err);
+        const grid = document.getElementById('eventList');
+        if(grid) grid.innerHTML = `<p style="color:#f43f5e; padding:20px;">데이터를 불러오지 못했습니다.</p>`;
+    }
 }
 
 async function loadMyApps() {
@@ -211,6 +233,12 @@ async function joinEvent(id, title) {
     } catch(e) { alert('오류'); }
 }
 
+// [수정됨] 이벤트 수정 페이지로 이동
+function editEvent(event, eventId) {
+    event.stopPropagation();
+    location.href = `create-event.html?id=${eventId}`;
+}
+
 async function deleteEvent(id) {
     event.stopPropagation();
     if(!confirm('삭제하시겠습니까?')) return;
@@ -241,4 +269,10 @@ async function approveUser(id) {
         body: JSON.stringify({ targetUserId: id })
     });
     loadPendingUsers();
+}
+
+function formatDateShort(isoString) {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    return `${date.getFullYear()}.${date.getMonth()+1}.${date.getDate()}`;
 }

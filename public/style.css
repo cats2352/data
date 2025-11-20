@@ -145,13 +145,7 @@ body {
 .apply-btn { width: 100%; background: #334155; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem;}
 .apply-btn:hover { background: var(--primary); }
 
-/* 삭제 버튼 */
-.delete-btn {
-    position: absolute; top: 10px; right: 10px;
-    background: rgba(239, 68, 68, 0.9); color: white;
-    border: none; padding: 6px 12px; border-radius: 5px;
-    font-size: 0.8rem; font-weight: bold; cursor: pointer; z-index: 10;
-}
+
 
 /* 모달 스타일 */
 .modal-overlay {
@@ -293,6 +287,39 @@ body {
     font-weight: bold;
     vertical-align: middle;
     letter-spacing: -0.5px;
+}
+
+/* ... 기존 CSS 코드들 ... */
+
+/* ★ [NEW] 관리자 버튼들을 감싸는 통 (우측 상단 고정) */
+.admin-btn-container {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    display: flex; /* 버튼들을 가로로 나열 */
+    gap: 5px;      /* 버튼 사이 간격 */
+}
+
+/* ★ [수정됨] 버튼 스타일 (위치 속성 제거됨) */
+.delete-btn {
+    /* position: absolute;  <-- 이거 지움! */
+    /* top: 10px; right: 10px; <-- 이거 지움! */
+    
+    background: rgba(239, 68, 68, 0.9); 
+    color: white;
+    border: none; 
+    padding: 6px 10px; 
+    border-radius: 5px;
+    font-size: 0.8rem; 
+    font-weight: bold; 
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.delete-btn:hover {
+    transform: scale(1.1);
+    filter: brightness(1.1);
 }
 
 /* --- 📱 모바일 전용 스타일 (화면 너비 600px 이하) --- */
