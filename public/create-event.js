@@ -21,18 +21,24 @@ window.onload = async () => {
     }
 };
 
-// ★ [NEW] UTC 시간을 로컬 시간(input datetime-local 포맷)으로 변환하는 함수
+// [뷰] UTC 시간을 로컬 시간(input datetime-local 포맷)으로 변환
 function toLocalISOString(isoString) {
     if (!isoString) return '';
     const date = new Date(isoString);
-    // 로컬 시간대 오프셋을 적용하여 보정
     const offset = date.getTimezoneOffset() * 60000;
     const localDate = new Date(date.getTime() - offset);
-    // ISO 문자열에서 앞 16자리(YYYY-MM-DDTHH:mm)만 추출
     return localDate.toISOString().slice(0, 16);
 }
 
-// [수정됨] 기존 데이터 불러와서 채우기
+// [저장용] 로컬 시간(input 값)을 UTC ISO 문자열로 변환 ★ 핵심 수정 부분
+function toUTCISOString(localString) {
+    if (!localString) return null;
+    // 브라우저는 new Date()에 로컬 시간 문자열을 넣으면 알아서 PC 타임존으로 해석합니다.
+    const date = new Date(localString); 
+    return date.toISOString(); // 이를 다시 UTC 표준시로 변환
+}
+
+// 기존 데이터 불러와서 채우기
 async function loadEventData(id) {
     try {
         const res = await fetch(`/api/events/${id}`);
@@ -41,7 +47,7 @@ async function loadEventData(id) {
         // 1. 기본 정보 채우기
         document.getElementById('evtTitle').value = evt.title;
         
-        // ★ [수정됨] 날짜 형식 변환 (단순 slice 대신 로컬 시간 변환 함수 사용)
+        // 날짜 불러오기 (로컬 시간 변환)
         if(evt.startDate) document.getElementById('evtStart').value = toLocalISOString(evt.startDate);
         if(evt.endDate) document.getElementById('evtEnd').value = toLocalISOString(evt.endDate);
         
@@ -51,15 +57,13 @@ async function loadEventData(id) {
         // 2. 커스텀 타입 정보 채우기
         if (evt.eventType === 'custom') {
             document.getElementById('customTypeName').value = evt.customEventType;
-            // ★ [수정됨] 여기도 로컬 시간 변환 적용
             if(evt.calcStartDate) document.getElementById('calcStart').value = toLocalISOString(evt.calcStartDate);
             if(evt.calcEndDate) document.getElementById('calcEnd').value = toLocalISOString(evt.calcEndDate);
         }
         
-        // 3. UI 갱신 (입력창들을 먼저 그립니다)
         handleTypeChange(); 
 
-        // 4. 세부 설정 값 채우기 (로또 vs 일반)
+        // 4. 세부 설정 값 채우기
         if (evt.eventType === 'lotto' && evt.lottoConfig) {
             if (typeof populateLottoSettings === 'function') {
                 populateLottoSettings(evt.lottoConfig);
@@ -86,7 +90,6 @@ async function loadEventData(id) {
             }
         }
 
-        // 5. 공통 설정값 채우기
         if (evt.settings) {
             document.getElementById('chkFirstCome').checked = evt.settings.isFirstCome;
             toggleFirstCome(); 
@@ -177,21 +180,26 @@ function toggleFirstCome() {
     else { input.classList.add('hidden'); input.value = ''; } 
 }
 
+// ★ [수정됨] 서버로 보낼 때 UTC로 변환하여 전송
 async function submitEvent() {
     const title = document.getElementById('evtTitle').value;
-    const start = document.getElementById('evtStart').value;
-    const end = document.getElementById('evtEnd').value;
+    const startInput = document.getElementById('evtStart').value;
+    const endInput = document.getElementById('evtEnd').value;
     const type = document.getElementById('evtType').value;
     const desc = document.getElementById('evtDesc').value;
 
-    if(!title || !start || !end || !type) return alert('필수 항목 입력 필요');
-    if (new Date(start) >= new Date(end)) return alert('종료 시간이 시작 시간보다 빨라야 합니다.');
+    if(!title || !startInput || !endInput || !type) return alert('필수 항목 입력 필요');
+    if (new Date(startInput) >= new Date(endInput)) return alert('종료 시간이 시작 시간보다 빨라야 합니다.');
+
+    // ★ 여기서 UTC로 변환합니다
+    const startDate = toUTCISOString(startInput);
+    const endDate = toUTCISOString(endInput);
 
     let prizes = [];
     let lottoConfig = null;
     let customTypeName = null;
-    let calcStart = null;
-    let calcEnd = null;
+    let calcStartDate = null;
+    let calcEndDate = null;
 
     if (type === 'lotto') {
         try { lottoConfig = getLottoConfig(); } 
@@ -207,9 +215,14 @@ async function submitEvent() {
         
         if (type === 'custom') {
             customTypeName = document.getElementById('customTypeName').value;
-            calcStart = document.getElementById('calcStart').value;
-            calcEnd = document.getElementById('calcEnd').value;
-            if(!customTypeName || !calcStart || !calcEnd) return alert('직접 입력 정보를 모두 입력해주세요.');
+            // 커스텀 타입 시간도 UTC 변환
+            const cStart = document.getElementById('calcStart').value;
+            const cEnd = document.getElementById('calcEnd').value;
+            
+            if(!customTypeName || !cStart || !cEnd) return alert('직접 입력 정보를 모두 입력해주세요.');
+            
+            calcStartDate = toUTCISOString(cStart);
+            calcEndDate = toUTCISOString(cEnd);
         }
     }
 
@@ -219,9 +232,9 @@ async function submitEvent() {
     const isCommentOnce = document.getElementById('chkCommentOnce').checked;
 
     const payload = {
-        title, startDate: start, endDate: end, eventType: type, desc,
+        title, startDate, endDate, eventType: type, desc,
         prizes, lottoConfig, 
-        customEventType: customTypeName, calcStartDate: calcStart, calcEndDate: calcEnd,
+        customEventType: customTypeName, calcStartDate, calcEndDate,
         settings: { isFirstCome, maxParticipants: Number(maxParticipants), isCommentAllowed, isCommentOnce }
     };
 
