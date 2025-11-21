@@ -7,13 +7,9 @@ let isLoginMode = true;
 let allEvents = [];
 let countdownInterval = null;
 
-const NO_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 300 160'%3E%3Crect fill='%231e293b' width='300' height='160'/%3E%3Ctext fill='%2394a3b8' x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-family='sans-serif' font-size='20'%3ENo Image%3C/text%3E%3C/svg%3E";
-
+// 시작 시 실행
 checkLoginStatus();
 loadEvents();
-
-// ... (checkLoginStatus, toggleAuthMode, handleAuth, logout, loadEvents, startCountdownTimer 함수들은 기존과 동일. 변경 없음.) ...
-// loadEvents 까지만 기존 코드를 유지하고, 아래 loadMyApps부터 덮어쓰세요.
 
 // --- 1. 화면 상태 관리 ---
 function checkLoginStatus() {
@@ -97,6 +93,7 @@ async function handleAuth() {
 
 function logout() { localStorage.clear(); location.href = '/'; }
 
+// --- 3. 이벤트 목록 ---
 async function loadEvents() {
     try {
         const res = await fetch('/api/events');
@@ -140,7 +137,18 @@ async function loadEvents() {
                 }
             }
 
-            const imgSrc = evt.imgUrl ? `/img/${evt.imgUrl}` : (typeof NO_IMAGE !== 'undefined' ? NO_IMAGE : '');
+            // ★ [수정됨] 이미지 처리 로직
+            let imgHtml = '';
+            if (evt.imgUrl) {
+                // 이미지가 있으면 표시하되, 에러(404 등) 발생 시 숨기고 텍스트 박스를 보여줌
+                imgHtml = `
+                    <img src="/img/${evt.imgUrl}" class="card-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="card-img-placeholder" style="display:none;">${evt.title}</div>
+                `;
+            } else {
+                // 이미지가 없으면 바로 텍스트 박스 표시
+                imgHtml = `<div class="card-img-placeholder">${evt.title}</div>`;
+            }
             
             let adminBtn = '';
             if (isAdmin) {
@@ -173,7 +181,7 @@ async function loadEvents() {
             const html = `
                 <div class="${cardClass}">
                     <div style="position:relative;">
-                        <img src="${imgSrc}" class="card-img" onerror="this.src='${NO_IMAGE}'">
+                        ${imgHtml}
                         ${adminBtn} 
                         ${badgeHtml}
                     </div>
@@ -231,7 +239,6 @@ function startCountdownTimer() {
     countdownInterval = setInterval(updateTimers, 1000); 
 }
 
-// ★ [수정됨] 내 참여 내역 로직 (배지 표시 수정)
 async function loadMyApps() {
     if (!token) return;
     try {
@@ -266,7 +273,7 @@ async function loadMyApps() {
             let statusText = '';
             let subText = '';
 
-            // 1. 로또 이벤트인 경우 (결과 확인 필요)
+            // 1. 로또 이벤트
             if (app.eventType === 'lotto') {
                 const hasChecked = app.drawResults && app.drawResults.length > 0;
 
@@ -285,12 +292,11 @@ async function loadMyApps() {
                     }
                 }
             } 
-            // 2. 직접입력(Custom) 등 그 외 이벤트 (자동 종료 처리)
+            // 2. 그 외 이벤트
             else {
                 let isEnded = false;
                 let isCalculating = false;
 
-                // 날짜 기반 상태 판단
                 if (now > endDate) {
                     if (calcStart && calcEnd) {
                         if (now >= calcStart && now <= calcEnd) isCalculating = true;
@@ -305,10 +311,7 @@ async function loadMyApps() {
                     badgeHtml = `<span style="color:#f39c12; border:1px solid #f39c12; padding:1px 5px; border-radius:4px; font-size:0.75rem; margin-right:5px;">집계중</span>`;
                     statusText = '⏳ 결과 집계 중';
                 } else if (isEnded) {
-                    // ★ 여기: 시간이 지나면 무조건 [종료] 배지
                     badgeHtml = `<span style="color:#94a3b8; border:1px solid #94a3b8; padding:1px 5px; border-radius:4px; font-size:0.75rem; margin-right:5px;">종료</span>`;
-                    
-                    // 당첨 정보가 있으면 표시
                     if (app.drawResults && app.drawResults.length > 0) {
                         statusText = `🎉 당첨! [${app.drawResults.join(', ')}]`;
                         subText = `<div style="color:#2ecc71; font-size:0.85rem; margin-top:5px;">축하합니다!</div>`;

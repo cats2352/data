@@ -13,9 +13,8 @@ let currentEvent = null;
 
 const NO_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 300 160'%3E%3Crect fill='%231e293b' width='300' height='160'/%3E%3Ctext fill='%2394a3b8' x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-family='sans-serif' font-size='20'%3ENo Image%3C/text%3E%3C/svg%3E";
 
+// 초기 실행 (여기서는 loadEventDetail만 먼저 호출합니다)
 loadEventDetail();
-loadParticipants();
-loadComments(); 
 
 async function loadEventDetail() {
     try {
@@ -23,8 +22,14 @@ async function loadEventDetail() {
         if (!res.ok) throw new Error('이벤트 로드 실패');
         
         const evt = await res.json();
-        currentEvent = evt;
+        currentEvent = evt; // ★ 이벤트 정보 저장 완료
 
+        // ★ [핵심 수정] 이벤트 정보를 받은 뒤에 참여자/댓글 목록을 불러옵니다.
+        // 그래야 currentEvent.eventType을 확인해서 로또 개수를 표시할 수 있습니다.
+        loadParticipants();
+        loadComments();
+
+        // --- UI 렌더링 시작 ---
         document.getElementById('evtTitle').innerText = evt.title;
         document.getElementById('evtAuthor').innerText = `👑 ${evt.author}`;
         
@@ -64,7 +69,6 @@ async function loadEventDetail() {
         if (isAdmin && evt.eventType === 'custom' && isCalcPeriod) {
             document.getElementById('adminWinnerPanel').classList.remove('hidden');
             
-            // ★ [NEW] 상품이 미리 설정되어 있다면 '수동 입력창' 숨김
             if (currentEvent.prizes && currentEvent.prizes.length > 0) {
                 document.getElementById('rewardName').classList.add('hidden');
             } else {
@@ -230,6 +234,8 @@ async function loadParticipants() {
         
         const myEntry = parts.find(p => p.userName === myNickname);
         const ticketInfoDiv = document.getElementById('myTicketInfo');
+        
+        // ★ 이제 currentEvent가 확실히 로드된 상태이므로 로또 여부를 정확히 판단 가능
         if (myEntry && currentEvent?.eventType === 'lotto') {
             ticketInfoDiv.innerText = `🎰 내 로또 개수: ${myEntry.ticketCount}개`;
         } else { ticketInfoDiv.innerText = ''; }
@@ -241,10 +247,15 @@ async function loadParticipants() {
 
         parts.forEach((p, index) => {
             let extraInfo = '';
+            
+            if (currentEvent?.eventType === 'lotto') {
+                extraInfo += ` <span style="color:#f39c12; font-size:0.9rem; font-weight:bold;">(🎰 ${p.ticketCount}개)</span>`;
+            }
+
             if (currentEvent?.eventType === 'lotto' && p.drawResults && p.drawResults.length > 0) {
                 const wins = p.drawResults.filter(r => r !== '꽝');
-                if (wins.length > 0) extraInfo = ` <span style="color:#f43f5e; font-weight:bold;">[🎁 ${wins.join(', ')}]</span>`;
-                else extraInfo = ` <span style="color:#64748b; font-size:0.85rem;">(꽝)</span>`;
+                if (wins.length > 0) extraInfo += ` <span style="color:#f43f5e; font-weight:bold;">[🎁 ${wins.join(', ')}]</span>`;
+                else extraInfo += ` <span style="color:#64748b; font-size:0.85rem;">(꽝)</span>`;
             }
             tbody.innerHTML += `<tr><td>${index + 1}</td><td><strong>${p.userName}</strong>${extraInfo}</td><td style="color:#94a3b8; font-size:0.9rem;">${formatDateDetail(p.appliedAt)}</td></tr>`;
         });
@@ -333,9 +344,7 @@ async function deleteComment(commentId) {
     } catch (err) { alert('오류 발생'); }
 }
 
-// ★ [NEW] 상품 선택 옵션 HTML 생성 함수
 function generatePrizeOptions() {
-    // 상품이 없으면(커스텀 입력 모드) 빈 문자열 반환 -> 체크박스 모드로 사용
     if (!currentEvent.prizes || currentEvent.prizes.length === 0) return null;
 
     let options = `<option value="">선택 안함</option>`;
@@ -355,7 +364,6 @@ async function loadCandidates() {
     const prizeOptions = generatePrizeOptions();
 
     container.innerHTML = comments.map(c => {
-        // 상품이 있으면 Select, 없으면 Checkbox
         let selectorHtml = '';
         if (prizeOptions) {
             selectorHtml = `<select class="winner-select" data-uid="${c.userId._id || c.userId}" data-nick="${c.userNickname}" data-content="${c.content}" style="background:#1e293b; color:white; border:1px solid #475569; padding:5px; border-radius:5px; width:100%; margin-top:5px;">${prizeOptions}</select>`;
@@ -365,10 +373,12 @@ async function loadCandidates() {
 
         return `
         <div class="comment-select-item">
-            ${!prizeOptions ? selectorHtml : ''} <div style="width:100%;">
+            ${!prizeOptions ? selectorHtml : ''} 
+            <div style="width:100%;">
                 <strong style="color:#3b82f6;">${c.userNickname}</strong>
                 <div style="color:#cbd5e1; font-size:0.9rem;">${c.content}</div>
-                ${prizeOptions ? selectorHtml : ''} </div>
+                ${prizeOptions ? selectorHtml : ''} 
+            </div>
         </div>`;
     }).join('');
 }
@@ -415,29 +425,25 @@ async function loadParticipantCandidates() {
     }).join('');
 }
 
-// ★ [수정됨] 당첨자 확정 로직 (상품 유무에 따라 분기)
 async function submitManualWinners() {
     if (!confirm('선택한 인원을 당첨자로 확정하시겠습니까?')) return;
     
     let winners = [];
 
-    // 1. 상품이 설정된 경우 (Select 방식)
     if (currentEvent.prizes && currentEvent.prizes.length > 0) {
         const selects = document.querySelectorAll('.winner-select');
         selects.forEach(sel => {
-            if (sel.value) { // 값이 선택된 경우만
-                const [label, reward] = sel.value.split('||'); // value="1위||치킨"
+            if (sel.value) { 
+                const [label, reward] = sel.value.split('||'); 
                 winners.push({
                     userId: sel.dataset.uid,
                     nickname: sel.dataset.nick,
                     content: sel.dataset.content,
-                    reward: `${label} (${reward})` // "1위 (치킨)" 형태로 저장
+                    reward: `${label} (${reward})` 
                 });
             }
         });
-    } 
-    // 2. 상품이 없는 경우 (Checkbox + Input 방식)
-    else {
+    } else {
         const reward = document.getElementById('rewardName').value;
         if(!reward) return alert('지급할 상품명을 입력해주세요.');
         const checkedBoxes = document.querySelectorAll('.chk-winner:checked');
