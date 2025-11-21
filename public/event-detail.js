@@ -28,7 +28,6 @@ async function loadEventDetail() {
         document.getElementById('evtTitle').innerText = evt.title;
         document.getElementById('evtAuthor').innerText = `👑 ${evt.author}`;
         
-        // ★ [수정됨] 날짜 포맷 적용
         const start = formatDateDetail(evt.startDate);
         const end = formatDateDetail(evt.endDate);
         document.getElementById('evtDate').innerText = `${start} ~ ${end}`;
@@ -64,7 +63,16 @@ async function loadEventDetail() {
         const isCalcPeriod = (evt.calcStartDate && new Date(evt.calcStartDate) <= now);
         if (isAdmin && evt.eventType === 'custom' && isCalcPeriod) {
             document.getElementById('adminWinnerPanel').classList.remove('hidden');
+            
+            // ★ [NEW] 상품이 미리 설정되어 있다면 '수동 입력창' 숨김
+            if (currentEvent.prizes && currentEvent.prizes.length > 0) {
+                document.getElementById('rewardName').classList.add('hidden');
+            } else {
+                document.getElementById('rewardName').classList.remove('hidden');
+            }
+
             loadCandidates(); 
+            loadParticipantCandidates();
         }
 
         // UI 분기 처리
@@ -91,7 +99,7 @@ async function loadEventDetail() {
                 joinBtn.style.background = '#8e44ad'; 
                 joinBtn.onclick = checkLottoResult;
             } else {
-                const btnText = evt.lottoConfig.frequency === 'daily' ? '📅 매일 참여하고 티켓 받기' : '🎫 티켓 받기 (1회)';
+                const btnText = evt.lottoConfig.frequency === 'daily' ? '📅 매일 참여하고 로또 받기' : '🎰 로또 받기 (1회)';
                 joinBtn.innerText = btnText;
                 joinBtn.onclick = joinCurrentEvent;
             }
@@ -149,8 +157,8 @@ async function loadEventDetail() {
 
 function renderLottoStats(config) {
     let html = `<div style="display:flex; gap:20px; flex-wrap:wrap;">`;
-    html += `<div style="flex:1; min-width:200px;"><strong style="color:var(--primary); display:block; margin-bottom:5px;">🎫 티켓 지급 확률</strong><ul style="padding-left:20px; margin:0;">`;
-    config.ticketRates.forEach(r => { html += `<li>${r.count}장 지급 : ${r.rate}%</li>`; });
+    html += `<div style="flex:1; min-width:200px;"><strong style="color:var(--primary); display:block; margin-bottom:5px;">🎰 로또 획득 확률</strong><ul style="padding-left:20px; margin:0;">`;
+    config.ticketRates.forEach(r => { html += `<li>${r.count}개 획득 : ${r.rate}%</li>`; });
     html += `</ul></div>`;
     html += `<div style="flex:1; min-width:200px;"><strong style="color:var(--accent); display:block; margin-bottom:5px;">🏆 당첨 확률 및 재고</strong><ul style="padding-left:20px; margin:0;">`;
     config.winRates.forEach(r => {
@@ -181,7 +189,7 @@ async function joinCurrentEvent() {
         });
         const data = await res.json();
         if (res.ok) {
-            if (data.tickets !== undefined) alert(`참여 완료!\n🎫 티켓 ${data.tickets}장을 획득했습니다.`);
+            if (data.tickets !== undefined) alert(`참여 완료!\n🎰 로또 ${data.tickets}개를 획득했습니다.\n(결과 확인 버튼을 눌러보세요!)`);
             else alert('참여 신청이 완료되었습니다!');
             loadParticipants(); 
         } else {
@@ -203,7 +211,7 @@ async function checkLottoResult() {
         const data = await res.json();
         if(data.results) {
             const winList = data.results.filter(r => r !== '꽝');
-            let msg = `🎫 사용한 티켓: ${data.results.length}장\n\n📜 추첨 결과:\n${data.results.join(', ')}`;
+            let msg = `🎰 확인한 로또: ${data.results.length}개\n\n📜 결과:\n${data.results.join(', ')}`;
             if(winList.length > 0) msg += `\n\n🎉 축하합니다! [${winList.join(', ')}] 당첨!`;
             else msg += `\n\n😭 아쉽게도 모두 꽝입니다.`;
             alert(msg);
@@ -223,7 +231,7 @@ async function loadParticipants() {
         const myEntry = parts.find(p => p.userName === myNickname);
         const ticketInfoDiv = document.getElementById('myTicketInfo');
         if (myEntry && currentEvent?.eventType === 'lotto') {
-            ticketInfoDiv.innerText = `🎫 내 보유 티켓: ${myEntry.ticketCount}장`;
+            ticketInfoDiv.innerText = `🎰 내 로또 개수: ${myEntry.ticketCount}개`;
         } else { ticketInfoDiv.innerText = ''; }
 
         if (parts.length === 0) {
@@ -238,7 +246,6 @@ async function loadParticipants() {
                 if (wins.length > 0) extraInfo = ` <span style="color:#f43f5e; font-weight:bold;">[🎁 ${wins.join(', ')}]</span>`;
                 else extraInfo = ` <span style="color:#64748b; font-size:0.85rem;">(꽝)</span>`;
             }
-            // ★ [수정됨] 상세 날짜 함수 사용
             tbody.innerHTML += `<tr><td>${index + 1}</td><td><strong>${p.userName}</strong>${extraInfo}</td><td style="color:#94a3b8; font-size:0.9rem;">${formatDateDetail(p.appliedAt)}</td></tr>`;
         });
     } catch (err) { console.error(err); }
@@ -263,9 +270,7 @@ async function loadComments() {
 }
 
 function createCommentHTML(c, isReply = false) {
-    // ★ [수정됨] 댓글 날짜도 상세하게 표시
     const date = formatDateDetail(c.createdAt);
-    
     const deleteBtn = (myNickname === c.userNickname || isAdmin) ? `<button class="cmt-action-btn" onclick="deleteComment('${c._id}')">삭제</button>` : '';
     const replyBtn = !isReply ? `<button class="cmt-action-btn" onclick="toggleReplyForm('${c._id}')">답글달기</button>` : '';
     const wrapperClass = isReply ? 'comment-item reply-item' : 'comment-item';
@@ -317,7 +322,7 @@ function toggleReplyForm(commentId) {
 }
 
 async function deleteComment(commentId) {
-    if (!confirm('정말 삭제하시겠습니까? (답글도 함께 삭제됩니다)')) return;
+    if (!confirm('정말 삭제하시겠습니까?')) return;
     try {
         const res = await fetch(`/api/comments/${commentId}`, {
             method: 'DELETE',
@@ -328,28 +333,121 @@ async function deleteComment(commentId) {
     } catch (err) { alert('오류 발생'); }
 }
 
+// ★ [NEW] 상품 선택 옵션 HTML 생성 함수
+function generatePrizeOptions() {
+    // 상품이 없으면(커스텀 입력 모드) 빈 문자열 반환 -> 체크박스 모드로 사용
+    if (!currentEvent.prizes || currentEvent.prizes.length === 0) return null;
+
+    let options = `<option value="">선택 안함</option>`;
+    currentEvent.prizes.forEach(p => {
+        options += `<option value="${p.label}||${p.reward}">${p.label} - ${p.reward}</option>`;
+    });
+    return options;
+}
+
 async function loadCandidates() {
     const res = await fetch(`/api/comments/${eventId}`);
     const comments = await res.json();
     const container = document.getElementById('commentCandidates');
+    
     if(comments.length === 0) { container.innerHTML = '<p style="text-align:center; color:#666;">작성된 댓글이 없습니다.</p>'; return; }
-    container.innerHTML = comments.map(c => `
+    
+    const prizeOptions = generatePrizeOptions();
+
+    container.innerHTML = comments.map(c => {
+        // 상품이 있으면 Select, 없으면 Checkbox
+        let selectorHtml = '';
+        if (prizeOptions) {
+            selectorHtml = `<select class="winner-select" data-uid="${c.userId._id || c.userId}" data-nick="${c.userNickname}" data-content="${c.content}" style="background:#1e293b; color:white; border:1px solid #475569; padding:5px; border-radius:5px; width:100%; margin-top:5px;">${prizeOptions}</select>`;
+        } else {
+            selectorHtml = `<input type="checkbox" class="chk-winner" value="${c.userId._id || c.userId}" data-nick="${c.userNickname}" data-content="${c.content}" style="width:20px; height:20px; margin-top:5px;">`;
+        }
+
+        return `
         <div class="comment-select-item">
-            <input type="checkbox" class="chk-winner" value="${c.userId._id || c.userId}" data-nick="${c.userNickname}" data-content="${c.content}">
-            <div style="width:100%;"><strong style="color:#3b82f6;">${c.userNickname}</strong><div style="color:#cbd5e1; font-size:0.9rem;">${c.content}</div></div>
-        </div>
-    `).join('');
+            ${!prizeOptions ? selectorHtml : ''} <div style="width:100%;">
+                <strong style="color:#3b82f6;">${c.userNickname}</strong>
+                <div style="color:#cbd5e1; font-size:0.9rem;">${c.content}</div>
+                ${prizeOptions ? selectorHtml : ''} </div>
+        </div>`;
+    }).join('');
 }
 
+function switchAdminTab(tab) {
+    document.querySelectorAll('.admin-tab-btn').forEach(btn => btn.classList.remove('active'));
+    if (tab === 'comment') {
+        document.querySelectorAll('.admin-tab-btn')[0].classList.add('active');
+        document.getElementById('tabComment').classList.remove('hidden');
+        document.getElementById('tabParticipant').classList.add('hidden');
+    } else {
+        document.querySelectorAll('.admin-tab-btn')[1].classList.add('active');
+        document.getElementById('tabComment').classList.add('hidden');
+        document.getElementById('tabParticipant').classList.remove('hidden');
+    }
+}
+
+async function loadParticipantCandidates() {
+    const res = await fetch(`/api/events/${eventId}/participants`);
+    const parts = await res.json();
+    const container = document.getElementById('participantCandidates');
+    
+    if(parts.length === 0) { container.innerHTML = '<p style="text-align:center; color:#666;">참여자가 없습니다.</p>'; return; }
+    
+    const prizeOptions = generatePrizeOptions();
+
+    container.innerHTML = parts.map(p => {
+        let selectorHtml = '';
+        if (prizeOptions) {
+            selectorHtml = `<select class="winner-select" data-uid="${p.userId}" data-nick="${p.userName}" data-content="참여 신청" style="background:#1e293b; color:white; border:1px solid #475569; padding:5px; border-radius:5px; width:100%; margin-top:5px;">${prizeOptions}</select>`;
+        } else {
+            selectorHtml = `<input type="checkbox" class="chk-winner" value="${p.userId}" data-nick="${p.userName}" data-content="참여 신청" style="width:20px; height:20px; margin-top:5px;">`;
+        }
+
+        return `
+        <div class="comment-select-item">
+            ${!prizeOptions ? selectorHtml : ''}
+            <div style="width:100%;">
+                <strong style="color:#2ecc71;">${p.userName}</strong>
+                <div style="color:#cbd5e1; font-size:0.9rem;">참여일: ${formatDateDetail(p.appliedAt)}</div>
+                ${prizeOptions ? selectorHtml : ''}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ★ [수정됨] 당첨자 확정 로직 (상품 유무에 따라 분기)
 async function submitManualWinners() {
     if (!confirm('선택한 인원을 당첨자로 확정하시겠습니까?')) return;
-    const reward = document.getElementById('rewardName').value;
-    if(!reward) return alert('지급할 상품명을 입력해주세요.');
-    const checkedBoxes = document.querySelectorAll('.chk-winner:checked');
-    if(checkedBoxes.length === 0) return alert('당첨자를 1명 이상 선택하세요.');
-    const winners = Array.from(checkedBoxes).map(box => ({
-        userId: box.value, nickname: box.dataset.nick, content: box.dataset.content, reward: reward
-    }));
+    
+    let winners = [];
+
+    // 1. 상품이 설정된 경우 (Select 방식)
+    if (currentEvent.prizes && currentEvent.prizes.length > 0) {
+        const selects = document.querySelectorAll('.winner-select');
+        selects.forEach(sel => {
+            if (sel.value) { // 값이 선택된 경우만
+                const [label, reward] = sel.value.split('||'); // value="1위||치킨"
+                winners.push({
+                    userId: sel.dataset.uid,
+                    nickname: sel.dataset.nick,
+                    content: sel.dataset.content,
+                    reward: `${label} (${reward})` // "1위 (치킨)" 형태로 저장
+                });
+            }
+        });
+    } 
+    // 2. 상품이 없는 경우 (Checkbox + Input 방식)
+    else {
+        const reward = document.getElementById('rewardName').value;
+        if(!reward) return alert('지급할 상품명을 입력해주세요.');
+        const checkedBoxes = document.querySelectorAll('.chk-winner:checked');
+        winners = Array.from(checkedBoxes).map(box => ({
+            userId: box.value, nickname: box.dataset.nick, content: box.dataset.content, reward: reward
+        }));
+    }
+    
+    if(winners.length === 0) return alert('당첨자를 1명 이상 선택하세요.');
+
     try {
         const res = await fetch(`/api/events/${eventId}/winners`, {
             method: 'POST',
@@ -361,21 +459,16 @@ async function submitManualWinners() {
     } catch (e) { alert('오류'); }
 }
 
-// ★ [NEW] 상세 날짜 포맷 함수 (YYYY.MM.DD 오전/오후 HH:MM)
 function formatDateDetail(isoString) {
     if (!isoString) return '';
     const date = new Date(isoString);
-    
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    
     let hours = date.getHours();
     const minutes = String(date.getMinutes()).padStart(2, '0');
     const ampm = hours >= 12 ? '오후' : '오전';
-    
     hours = hours % 12;
-    hours = hours ? hours : 12; // 0시는 12시로 표시
-    
+    hours = hours ? hours : 12; 
     return `${year}.${month}.${day}. ${ampm} ${hours}:${minutes}`;
 }

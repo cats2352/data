@@ -4,7 +4,7 @@ const Event = require('../models/Event');
 const Application = require('../models/Application');
 const { authenticateToken } = require('../middleware/auth');
 
-// 1. 이벤트 참여 (티켓 지급 포함)
+// 1. 이벤트 참여 (기존 동일)
 router.post('/apply', authenticateToken, async (req, res) => {
     try {
         const { eventId, eventTitle } = req.body;
@@ -14,22 +14,18 @@ router.post('/apply', authenticateToken, async (req, res) => {
         let app = await Application.findOne({ eventId, userId });
         const now = new Date();
 
-        // [참여 횟수 제한 체크]
         if (app) {
             if (event.lottoConfig && event.lottoConfig.frequency === 'daily') {
-                // 매일 참여: 날짜가 같은지 확인
                 const lastDate = new Date(app.lastAppliedAt).toDateString();
                 const today = now.toDateString();
                 if (lastDate === today) {
                     return res.status(400).json({ message: '오늘은 이미 참여했습니다. 내일 다시 오세요!' });
                 }
             } else {
-                // 1회 참여
                 return res.status(400).json({ message: '이미 참여한 이벤트입니다.' });
             }
         }
 
-        // [티켓 개수 추첨]
         let gotTickets = 0;
         if (event.eventType === 'lotto' && event.lottoConfig) {
             const rates = event.lottoConfig.ticketRates;
@@ -44,7 +40,6 @@ router.post('/apply', authenticateToken, async (req, res) => {
             }
         }
 
-        // [DB 저장/업데이트]
         if (app) {
             app.ticketCount += gotTickets;
             app.lastAppliedAt = now;
@@ -68,7 +63,7 @@ router.post('/apply', authenticateToken, async (req, res) => {
     }
 });
 
-// 2. 내 신청 내역 조회 (삭제된 이벤트 자동 정리)
+// 2. 내 신청 내역 조회 (★ 수정됨: 이벤트 타입 및 기간 정보 추가)
 router.get('/my-apps', authenticateToken, async (req, res) => {
     try {
         const myApps = await Application.find({ userId: req.user.id });
@@ -77,14 +72,19 @@ router.get('/my-apps', authenticateToken, async (req, res) => {
         for (const app of myApps) {
             const event = await Event.findById(app.eventId);
             if (!event) {
-                // 이벤트가 삭제되었으면 신청 내역도 삭제
                 await Application.findByIdAndDelete(app._id);
             } else {
-                activeApps.push(app);
+                const appData = app.toObject(); 
+                // ★ 핵심: 이벤트의 타입과 시간 정보를 같이 보냄
+                appData.eventEndDate = event.endDate; 
+                appData.eventType = event.eventType;
+                appData.calcStartDate = event.calcStartDate;
+                appData.calcEndDate = event.calcEndDate;
+                
+                activeApps.push(appData);
             }
         }
         
-        // 최신순 정렬
         activeApps.sort((a, b) => new Date(b.appliedAt) - new Date(a.appliedAt));
         res.json(activeApps);
     } catch (err) {
@@ -92,7 +92,7 @@ router.get('/my-apps', authenticateToken, async (req, res) => {
     }
 });
 
-// 3. 당첨 결과 확인 (가챠 돌리기 & 재고 체크)
+// 3. 당첨 결과 확인 (기존 동일)
 router.post('/lotto/draw', authenticateToken, async (req, res) => {
     try {
         const { eventId } = req.body;
@@ -105,14 +105,12 @@ router.post('/lotto/draw', authenticateToken, async (req, res) => {
         const results = [];
         const winRates = event.lottoConfig.winRates;
 
-        // 티켓 수만큼 반복 추첨
         for (let i = 0; i < app.ticketCount; i++) {
             const rand = Math.random() * 100;
             let cumulative = 0;
             let pickedItem = null;
             let pickedName = '꽝';
 
-            // 확률에 따른 선택
             for (const item of winRates) {
                 cumulative += item.rate;
                 if (rand <= cumulative) {
@@ -121,26 +119,22 @@ router.post('/lotto/draw', authenticateToken, async (req, res) => {
                 }
             }
 
-            // 재고 확인 (품절이면 꽝)
             if (pickedItem && pickedItem.name !== '꽝') {
                 if (pickedItem.maxCount > 0 && pickedItem.currentCount >= pickedItem.maxCount) {
-                    pickedName = '꽝'; // 품절
+                    pickedName = '꽝'; 
                 } else {
                     pickedName = pickedItem.name;
-                    pickedItem.currentCount += 1; // 재고 차감
+                    pickedItem.currentCount += 1; 
                 }
             } else {
                 pickedName = '꽝';
             }
-            
             results.push(pickedName);
         }
 
-        // 변경된 재고 저장
         event.markModified('lottoConfig.winRates');
         await event.save();
 
-        // 결과 저장
         app.drawResults = results;
         await app.save();
         
