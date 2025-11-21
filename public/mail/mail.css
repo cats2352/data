@@ -1,0 +1,67 @@
+/* 쪽지 아이콘 및 배지 */
+.mail-icon-wrapper {
+    position: relative;
+    cursor: pointer;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    font-size: 1.2rem;
+}
+
+.mail-badge {
+    position: absolute;
+    top: -5px;
+    right: -8px;
+    background: #f43f5e;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: bold;
+    border: 1px solid #0f172a;
+}
+
+/* 쪽지함 모달 내부 리스트 */
+.mail-list {
+    max-height: 400px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.mail-item {
+    background: #1e293b;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #334155;
+    text-align: left;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.mail-item:hover { border-color: var(--primary); transform: translateX(5px); }
+.mail-item.unread { border-left: 4px solid #f43f5e; background: #252f45; }
+
+.mail-subject { font-weight: bold; font-size: 1rem; color: white; margin-bottom: 5px; }
+.mail-meta { font-size: 0.8rem; color: #94a3b8; }
+
+/* 쪽지 보내기 폼 */
+.send-mail-form input,
+.send-mail-form textarea {
+    width: 100%;
+    background: #0f172a;
+    color: white;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px;
+    font-family: 'Pretendard', sans-serif;
+}
+
+.send-mail-form textarea {
+    height: 120px;
+    resize: none;
+}

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVENT HUB</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mail/mail.css">
 </head>
 <body>
     <div id="login-view" class="login-wrapper">
@@ -31,7 +32,7 @@
 
     <div id="main-view" class="hidden">
         <nav class="navbar">
-            <div class="logo">EVENT HUB</div>
+            <div class="logo" onclick="location.href='/'" style="cursor:pointer;">EVENT HUB</div>
             <div id="nav-actions"></div>
         </nav>
 
@@ -74,12 +75,63 @@
             <div id="pendingList" style="margin-bottom:20px;"></div>
 
             <h3 style="font-size:1rem; color:#2ecc71; border-bottom:1px solid #444; padding-bottom:5px; margin-top:20px; text-align:left;">✅ 승인된 유저</h3>
+            
+            <input type="text" id="userSearchInput" onkeyup="filterApprovedUsers()" placeholder="🔍 닉네임 검색..." style="width:100%; padding:10px; margin-bottom:10px; background:#0f172a; color:white; border:1px solid #334155; border-radius:8px; font-size:0.9rem;">
+
             <div id="approvedList" style="max-height:200px; overflow-y:auto;"></div>
 
             <button class="apply-btn" style="background:none; margin-top:20px; border:1px solid #666;" onclick="closeModal('adminModal')">닫기</button>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <div id="mailBoxModal" class="modal-overlay hidden">
+        <div class="modal-box" style="max-width: 500px;">
+            <h2 style="border-bottom:1px solid #444; padding-bottom:10px;">📬 내 쪽지함</h2>
+            <p style="color:#f43f5e; font-size:0.85rem; margin-top:5px; margin-bottom:15px;">※ 쪽지함 내 7일이 경과한 쪽지는 자동으로 삭제됩니다.</p>
+            <div id="mailList" class="mail-list"></div>
+            <button class="apply-btn" style="background:#334155; margin-top:20px;" onclick="closeModal('mailBoxModal')">닫기</button>
+        </div>
+    </div>
+
+    <div id="mailDetailModal" class="modal-overlay hidden">
+        <div class="modal-box" style="max-width: 500px; text-align:left;">
+            <h2 id="detailSubject" style="border-bottom:1px solid #444; padding-bottom:10px; color:var(--primary);">제목</h2>
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px; font-size:0.9rem; color:#94a3b8;">
+                <span id="detailSender">보낸이: 관리자</span>
+                <span id="detailDate"></span>
+            </div>
+            <div id="detailContent" class="mail-content-view" style="min-height:150px; background:#1e293b; padding:15px; border-radius:10px; border:1px solid #334155; white-space: pre-wrap; color:#cbd5e1;"></div>
+            <div style="text-align:center; margin-top:20px;">
+                <button class="apply-btn" style="background:#334155;" onclick="closeModal('mailDetailModal')">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sendMailModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2>📨 쪽지 보내기</h2>
+            <p style="color:#94a3b8; margin-bottom:15px;">받는 사람: <strong id="targetUserName" style="color:var(--primary);"></strong></p>
+            <div class="send-mail-form">
+                <input type="text" id="mailSubject" placeholder="제목을 입력하세요" style="width:100%; padding:10px; margin-bottom:10px; background:#0f172a; color:white; border:1px solid #334155; border-radius:8px;">
+                <textarea id="mailContent" placeholder="보낼 내용을 입력하세요..."></textarea>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="apply-btn" style="background:var(--primary);" onclick="sendMail()">보내기</button>
+                <button class="apply-btn" style="background:#334155;" onclick="closeModal('sendMailModal')">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/globals.js"></script>
+    <script src="mail/mail.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/user.js"></script>
+    <script src="js/event.js"></script>
+    <script src="js/admin.js"></script>
+
+    <script>
+        checkLoginStatus();
+        loadEvents();
+    </script>
 </body>
 </html>

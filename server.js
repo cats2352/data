@@ -10,6 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/api/mail', require('./routes/mail'));
 
 // DB 연결
 mongoose.connect(MONGO_URI)
