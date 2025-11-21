@@ -4,7 +4,7 @@ const Event = require('../models/Event');
 const Application = require('../models/Application');
 const { authenticateToken } = require('../middleware/auth');
 
-// 1. 이벤트 참여
+// 1. 이벤트 참여 (로또 추첨 로직을 여기로 이동)
 router.post('/apply', authenticateToken, async (req, res) => {
     try {
         const { eventId, eventTitle } = req.body;
@@ -25,11 +25,12 @@ router.post('/apply', authenticateToken, async (req, res) => {
             }
         }
 
-        // [수정] 이벤트 타입별 로직 분기
-        let storedValue = 0; // 로또는 티켓수, 숫자뽑기는 뽑은 숫자
+        let storedValue = 0; // 티켓 수 or 숫자
+        let preCalculatedResults = []; // ★ 미리 계산된 당첨 결과
 
         // A. 로또 이벤트
         if (event.eventType === 'lotto' && event.lottoConfig) {
+            // 1) 티켓 개수 결정
             const rates = event.lottoConfig.ticketRates;
             const rand = Math.random() * 100;
             let cumulative = 0;
@@ -40,15 +41,54 @@ router.post('/apply', authenticateToken, async (req, res) => {
                     break;
                 }
             }
+
+            // 2) ★ [NEW] 당첨 여부 미리 계산 (재고 차감 포함)
+            const winRates = event.lottoConfig.winRates;
+            
+            for (let i = 0; i < storedValue; i++) {
+                const randWin = Math.random() * 100;
+                let cumWin = 0;
+                let pickedItem = null;
+                let pickedName = '꽝';
+
+                for (const item of winRates) {
+                    cumWin += item.rate;
+                    if (randWin <= cumWin) {
+                        pickedItem = item;
+                        break;
+                    }
+                }
+
+                if (pickedItem && pickedItem.name !== '꽝') {
+                    // 재고 확인
+                    if (pickedItem.maxCount > 0 && pickedItem.currentCount >= pickedItem.maxCount) {
+                        pickedName = '꽝'; 
+                    } else {
+                        pickedName = pickedItem.name;
+                        pickedItem.currentCount += 1; // ★ 여기서 미리 재고 차감
+                    }
+                } else {
+                    pickedName = '꽝';
+                }
+                preCalculatedResults.push(pickedName);
+            }
+            
+            // 변경된 재고 저장
+            event.markModified('lottoConfig.winRates');
+            await event.save();
         } 
-        // B. [NEW] 제일 높은 숫자 뽑기 이벤트
+        // B. 숫자 뽑기 이벤트
         else if (event.eventType === 'highest_number') {
-            // 1 ~ 99999 랜덤 생성
             storedValue = Math.floor(Math.random() * 99999) + 1;
         }
 
         if (app) {
-            app.ticketCount += storedValue; // 로또일 경우 누적
+            // 매일 참여인 경우 누적
+            app.ticketCount += storedValue; 
+            // 기존 결과에 새 결과 추가
+            if (preCalculatedResults.length > 0) {
+                app.hiddenResults = (app.hiddenResults || []).concat(preCalculatedResults);
+            }
             app.lastAppliedAt = now;
             await app.save();
         } else {
@@ -57,13 +97,13 @@ router.post('/apply', authenticateToken, async (req, res) => {
                 eventTitle, 
                 userId, 
                 userName: req.user.nickname,
-                ticketCount: storedValue, // 여기 저장됩니다
+                ticketCount: storedValue,
+                hiddenResults: preCalculatedResults, // ★ 여기에 저장
                 lastAppliedAt: now
             });
             await app.save();
         }
 
-        // 응답에 결과값 포함
         res.json({ 
             message: `참여 완료!`, 
             tickets: event.eventType === 'lotto' ? storedValue : undefined,
@@ -102,57 +142,37 @@ router.get('/my-apps', authenticateToken, async (req, res) => {
     }
 });
 
-// 3. 당첨 결과 확인 (기존 유지)
+// 3. 당첨 결과 확인 (단순히 숨겨진 결과를 공개로 전환)
 router.post('/lotto/draw', authenticateToken, async (req, res) => {
-    // ... (기존 코드 동일) ...
     try {
         const { eventId } = req.body;
         const app = await Application.findOne({ eventId, userId: req.user.id });
-        const event = await Event.findById(eventId);
-
-        if (!app || !event) return res.status(400).json({ message: '정보 없음' });
-        if (app.drawResults.length > 0) return res.json({ results: app.drawResults, message: '이미 확인했습니다.' });
-
-        const results = [];
-        const winRates = event.lottoConfig.winRates;
-
-        for (let i = 0; i < app.ticketCount; i++) {
-            const rand = Math.random() * 100;
-            let cumulative = 0;
-            let pickedItem = null;
-            let pickedName = '꽝';
-
-            for (const item of winRates) {
-                cumulative += item.rate;
-                if (rand <= cumulative) {
-                    pickedItem = item;
-                    break;
-                }
-            }
-
-            if (pickedItem && pickedItem.name !== '꽝') {
-                if (pickedItem.maxCount > 0 && pickedItem.currentCount >= pickedItem.maxCount) {
-                    pickedName = '꽝'; 
-                } else {
-                    pickedName = pickedItem.name;
-                    pickedItem.currentCount += 1; 
-                }
-            } else {
-                pickedName = '꽝';
-            }
-            results.push(pickedName);
+        
+        if (!app) return res.status(400).json({ message: '정보 없음' });
+        if (app.drawResults.length > 0 && (!app.hiddenResults || app.hiddenResults.length === 0)) {
+            return res.json({ results: app.drawResults, message: '이미 확인했습니다.' });
         }
 
-        event.markModified('lottoConfig.winRates');
-        await event.save();
+        // ★ 저장된 hiddenResults를 drawResults로 이동
+        // (만약 예전 데이터라 hiddenResults가 없다면 여기서 계산하는 로직을 둘 수도 있지만, 
+        //  깔끔하게 새 로직만 적용합니다. 기존 데이터는 '꽝' 처리되거나 할 수 있음)
+        let results = app.hiddenResults || [];
+        
+        // 만약 hiddenResults가 비어있는데 티켓은 있다면? (예외 상황: 꽝으로 채움)
+        if (results.length < app.ticketCount) {
+            const diff = app.ticketCount - results.length;
+            for(let i=0; i<diff; i++) results.push('꽝');
+        }
 
         app.drawResults = results;
+        // app.hiddenResults = []; // 필요하다면 비워도 됨 (여기선 기록용으로 둠)
+        
         await app.save();
         
         res.json({ results, message: '결과 확인 완료!' });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: '추첨 중 오류 발생' });
+        res.status(500).json({ message: '오류 발생' });
     }
 });
 

@@ -2,6 +2,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const eventId = urlParams.get('id');
 const token = localStorage.getItem('token');
 const myNickname = localStorage.getItem('nickname'); 
+// ★ [중요] 관리자 권한 확인 (문자열 'true'를 불리언 true로 변환)
 const isAdmin = localStorage.getItem('isAdmin') === 'true'; 
 
 if (!eventId) {
@@ -10,7 +11,6 @@ if (!eventId) {
 }
 
 let currentEvent = null;
-const NO_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 300 160'%3E%3Crect fill='%231e293b' width='300' height='160'/%3E%3Ctext fill='%2394a3b8' x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-family='sans-serif' font-size='20'%3ENo Image%3C/text%3E%3C/svg%3E";
 
 // 초기 실행
 loadEventDetail();
@@ -46,20 +46,28 @@ async function loadEventDetail() {
             document.getElementById('calcDateInfo').innerText = `⏳ 집계/발표 기간: ${calcStart} ~ ${calcEnd}`;
         }
 
+        // [🏆 최종 당첨자 발표 목록] - 관리자 쪽지 버튼 포함
         if (evt.manualWinners && evt.manualWinners.length > 0) {
             const box = document.getElementById('manualWinnersBox');
             const list = document.getElementById('manualWinnersList');
             box.classList.remove('hidden');
             
-            list.innerHTML = evt.manualWinners.map(w => 
-                `<div style="padding:10px; border-bottom:1px solid #444; display:flex; justify-content:space-between; align-items:center;">
+            list.innerHTML = evt.manualWinners.map(w => {
+                let mailBtn = '';
+                // 관리자이고 본인이 아니면 쪽지 버튼 표시
+                if (isAdmin && w.nickname !== myNickname && w.userId) {
+                    mailBtn = `<button onclick="openSendMailModal('${w.userId}', '${w.nickname}')" style="margin-left:5px; background:none; border:1px solid #3b82f6; color:#3b82f6; border-radius:4px; padding:2px 5px; font-size:0.75rem; cursor:pointer;">📩</button>`;
+                }
+                
+                return `<div style="padding:10px; border-bottom:1px solid #444; display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <span style="color:#f39c12; font-weight:bold; font-size:1.1rem;">${w.nickname}</span> 
-                        <span style="color:#cbd5e1; font-size:0.9rem; margin-left:10px;">(${w.content ? w.content.substring(0,20) + '...' : '참여자'})</span>
+                        ${mailBtn}
+                        <span style="color:#cbd5e1; font-size:0.9rem; margin-left:5px;">(${w.content ? w.content.substring(0,20) + '...' : '참여자'})</span>
                     </div>
                     <span style="color:#2ecc71; font-weight:bold;">🎁 ${w.reward}</span>
-                 </div>`
-            ).join('');
+                 </div>`;
+            }).join('');
         }
 
         const isCalcPeriod = (evt.calcStartDate && new Date(evt.calcStartDate) <= now);
@@ -105,7 +113,7 @@ async function loadEventDetail() {
             }
 
         } 
-        // B. [NEW] 제일 높은 숫자 뽑기 이벤트
+        // B. 제일 높은 숫자 뽑기 이벤트
         else if (evt.eventType === 'highest_number') {
             visibilityBadge.classList.add('hidden');
             normalPrizeBox.classList.remove('hidden');
@@ -131,7 +139,6 @@ async function loadEventDetail() {
                 joinBtn.style.background = '#475569';
             } else {
                 joinBtn.innerText = '🎲 숫자 뽑고 랭킹 등록하기';
-                // 전용 참여 함수 연결
                 joinBtn.onclick = joinHighestNumberEvent;
             }
         } 
@@ -208,7 +215,6 @@ function renderLottoStats(config) {
 
 async function handleMainAction() { /* fallback */ }
 
-// 일반 참여 함수
 async function joinCurrentEvent() {
     if (!token) return alert('로그인이 필요합니다.');
     const title = document.getElementById('evtTitle').innerText;
@@ -233,7 +239,6 @@ async function joinCurrentEvent() {
     }
 }
 
-// [NEW] 숫자 뽑기 참여 함수
 async function joinHighestNumberEvent() {
     if (!token) return alert('로그인이 필요합니다.');
     const title = document.getElementById('evtTitle').innerText;
@@ -249,10 +254,8 @@ async function joinHighestNumberEvent() {
         const data = await res.json();
         
         if (res.ok) {
-            // 서버에서 뽑은 숫자(data.drawnNumber)로 애니메이션 실행
             if (typeof playNumberAnimation === 'function' && data.drawnNumber) {
                 playNumberAnimation(data.drawnNumber, () => {
-                    // 확인 버튼 누르면 리스트 갱신
                     loadParticipants();
                 });
             } else {
@@ -287,7 +290,10 @@ async function checkLottoResult() {
     } catch(e) { alert('오류'); }
 }
 
-// ★ loadParticipants 함수 (쪽지 버튼 추가됨)
+// ★ loadParticipants: 로또/일반/숫자뽑기 참여자 현황 통합 처리
+// ... (이전 코드와 동일, urlParams ~ checkLottoResult 함수까지)
+
+// ★ loadParticipants 수정됨
 async function loadParticipants() {
     try {
         const res = await fetch(`/api/events/${eventId}/participants`);
@@ -296,7 +302,6 @@ async function loadParticipants() {
         const tbody = document.getElementById('partList');
         tbody.innerHTML = '';
         
-        // 숫자 뽑기 이벤트인 경우 랭킹 표시
         if (currentEvent?.eventType === 'highest_number' && typeof renderHighestRanking === 'function') {
             renderHighestRanking(parts);
         } else {
@@ -329,13 +334,22 @@ async function loadParticipants() {
                 extraInfo += ` <span style="color:#2ecc71; font-weight:bold;">[${p.ticketCount}]</span>`;
             }
 
+            // 1. 유저가 이미 확인한 결과
             if (currentEvent?.eventType === 'lotto' && p.drawResults && p.drawResults.length > 0) {
                 const wins = p.drawResults.filter(r => r !== '꽝');
                 if (wins.length > 0) extraInfo += ` <span style="color:#f43f5e; font-weight:bold;">[🎁 ${wins.join(', ')}]</span>`;
                 else extraInfo += ` <span style="color:#64748b; font-size:0.85rem;">(꽝)</span>`;
             }
+            // 2. ★ [NEW] 관리자 전용 미리보기 (유저는 아직 확인 안 함)
+            else if (isAdmin && currentEvent?.eventType === 'lotto' && p.hiddenResults && p.hiddenResults.length > 0) {
+                const hiddenWins = p.hiddenResults.filter(r => r !== '꽝');
+                if (hiddenWins.length > 0) {
+                    extraInfo += ` <span style="color:#a855f7; font-size:0.85rem;">[🔮 미확인 당첨: ${hiddenWins.join(', ')}]</span>`;
+                } else {
+                    extraInfo += ` <span style="color:#64748b; font-size:0.85rem;">[🔮 미확인: 꽝]</span>`;
+                }
+            }
 
-            // ★ [NEW] 관리자용 쪽지 버튼 추가
             let mailBtn = '';
             if (isAdmin && p.userName !== myNickname) {
                 mailBtn = `<button onclick="openSendMailModal('${p.userId}', '${p.userName}')" style="margin-left:8px; background:none; border:1px solid #3b82f6; color:#3b82f6; border-radius:4px; padding:2px 6px; font-size:0.75rem; cursor:pointer;">📩 쪽지</button>`;
@@ -349,6 +363,8 @@ async function loadParticipants() {
         });
     } catch (err) { console.error(err); }
 }
+
+// ... (이하 나머지 코드 동일)
 
 async function loadComments() {
     try {
@@ -566,7 +582,6 @@ function formatDateDetail(isoString) {
     hours = hours ? hours : 12; 
     return `${year}.${month}.${day}. ${ampm} ${hours}:${minutes}`;
 }
-
 
 // --- [NEW] 당첨자 개별 지정 로직 (숫자 뽑기용) ---
 

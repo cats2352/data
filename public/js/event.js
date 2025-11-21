@@ -9,11 +9,15 @@ async function loadEvents() {
 
         allEvents = await res.json();
         const activeGrid = document.getElementById('eventList');
+        const upcomingGrid = document.getElementById('upcomingList'); // ★ 추가됨
         const calcGrid = document.getElementById('calculatingList');
         const endedGrid = document.getElementById('endedList');
+        
+        const upcomingSection = document.getElementById('upcomingSection'); // ★ 추가됨
         const calcSection = document.getElementById('calcSection');
         
         activeGrid.innerHTML = '';
+        upcomingGrid.innerHTML = ''; // ★ 초기화
         calcGrid.innerHTML = '';
         endedGrid.innerHTML = '';
 
@@ -22,6 +26,7 @@ async function loadEvents() {
         if (countdownInterval) clearInterval(countdownInterval);
 
         allEvents.forEach(evt => {
+            const startDate = new Date(evt.startDate);
             const endDate = new Date(evt.endDate);
             const calcStart = evt.calcStartDate ? new Date(evt.calcStartDate) : null;
             const calcEnd = evt.calcEndDate ? new Date(evt.calcEndDate) : null;
@@ -29,7 +34,13 @@ async function loadEvents() {
             let status = 'active';
             let badgeHtml = '';
 
-            if (now > endDate) {
+            // 1. 날짜 비교 로직 세분화
+            if (now < startDate) {
+                // ★ [NEW] 진행 예정 상태
+                status = 'upcoming';
+                badgeHtml = '<div class="ended-badge" style="border-color:#3b82f6; color:#3b82f6;">진행 예정</div>';
+            } else if (now > endDate) {
+                // 종료 상태 (또는 집계 중)
                 if (calcStart && calcEnd && now >= calcStart && now <= calcEnd) {
                     status = 'calculating';
                     badgeHtml = '<div class="ended-badge" style="border-color:#f39c12; color:#f39c12;">집계 중</div>';
@@ -43,6 +54,9 @@ async function loadEvents() {
                      status = 'calculating';
                      badgeHtml = '<div class="ended-badge" style="border-color:#f39c12; color:#f39c12;">집계 대기</div>';
                 }
+            } else {
+                // 진행 중
+                status = 'active';
             }
 
             let imgHtml = evt.imgUrl ? 
@@ -63,7 +77,13 @@ async function loadEvents() {
             let btnHtml = '';
             let dateDisplayHtml = '';
 
-            if (status === 'active') {
+            // 2. 상태별 버튼 및 날짜 표시
+            if (status === 'upcoming') {
+                // ★ [NEW] 진행 예정용 UI
+                const startStr = formatDateShort(evt.startDate);
+                btnHtml = `<button class="apply-btn" disabled style="background:#1e293b; border:1px solid #3b82f6; color:#3b82f6; cursor:default;">${startStr} 오픈 예정</button>`;
+                dateDisplayHtml = `<div class="card-date" style="color:#3b82f6;">⏳ 오픈 대기중</div>`;
+            } else if (status === 'active') {
                 btnHtml = `<button class="apply-btn" onclick="joinEvent('${evt._id}', '${evt.title}')">참여하기</button>`;
                 dateDisplayHtml = `<div class="card-date countdown-timer" data-end="${evt.endDate}" style="color:#2ecc71; font-weight:bold;">⏳ 계산 중...</div>`;
             } else {
@@ -86,10 +106,16 @@ async function loadEvents() {
                     </div>
                 </div>`;
 
+            // 3. 해당 그리드에 추가
             if (status === 'active') activeGrid.innerHTML += html;
+            else if (status === 'upcoming') upcomingGrid.innerHTML += html; // ★ 추가됨
             else if (status === 'calculating') calcGrid.innerHTML += html;
             else endedGrid.innerHTML += html;
         });
+
+        // 섹션 표시/숨김 처리
+        if (upcomingGrid.innerHTML !== '') upcomingSection.classList.remove('hidden');
+        else upcomingSection.classList.add('hidden');
 
         if (calcGrid.innerHTML !== '') calcSection.classList.remove('hidden');
         else calcSection.classList.add('hidden');

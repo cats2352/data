@@ -68,6 +68,7 @@ function playNumberAnimation(targetNumber, onFinish) {
  * 2. 순위표 렌더링 (높은 숫자 순서대로) + [수정됨] 관리자 기능 추가
  */
 function renderHighestRanking(participants) {
+    const isAdmin = localStorage.getItem('isAdmin') === 'true';
     const container = document.getElementById('customRankingArea');
     if (!container) return;
 
