@@ -91,6 +91,8 @@
             </div>
         </div>
 
+        <div id="customRankingArea" class="content-box hidden"></div>
+
         <div class="content-box">
             <div class="section-label">👥 참여자 현황 (<span id="partCount">0</span>명)</div>
             <p id="limitMsg" style="color:#f43f5e; margin-bottom:10px; display:none;"></p>
@@ -105,6 +107,43 @@
             <div id="commentList" class="comment-list"></div>
         </div>
     </div>
+    
+    <div id="prizeSelectModal" class="modal-overlay hidden">
+        <div class="modal-box" style="max-width: 400px;">
+            <h2 style="color:var(--primary); margin-bottom:10px;">🎁 상품 지급</h2>
+            <p style="color:#cbd5e1; margin-bottom:20px;">
+                당첨자: <strong id="targetWinnerName" style="color:white; font-size:1.1rem;"></strong>
+            </p>
+            
+            <div style="text-align:left; margin-bottom:20px;">
+                <label style="display:block; color:#94a3b8; margin-bottom:5px;">지급할 상품 선택</label>
+                <select id="prizeSelector" style="width:100%; padding:10px; background:#0f172a; color:white; border:1px solid #334155; border-radius:8px;">
+                    </select>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <button class="apply-btn" style="background:var(--primary);" onclick="confirmGivePrize()">확정 및 지급</button>
+                <button class="apply-btn" style="background:#334155;" onclick="document.getElementById('prizeSelectModal').classList.add('hidden')">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sendMailModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2>📨 쪽지 보내기</h2>
+            <p style="color:#94a3b8; margin-bottom:15px;">받는 사람: <strong id="targetUserName" style="color:var(--primary);"></strong></p>
+            <div class="send-mail-form">
+                <input type="text" id="mailSubject" placeholder="제목을 입력하세요" style="width:100%; padding:10px; margin-bottom:10px; background:#0f172a; color:white; border:1px solid #334155; border-radius:8px;">
+                <textarea id="mailContent" placeholder="보낼 내용을 입력하세요..." style="width:100%; height:120px; background:#0f172a; color:white; border:1px solid #334155; border-radius:8px; padding:10px; resize:none;"></textarea>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="apply-btn" style="background:var(--primary);" onclick="sendMail()">보내기</button>
+                <button class="apply-btn" style="background:#334155;" onclick="document.getElementById('sendMailModal').classList.add('hidden')">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/event/highest-number.js"></script>
     <script src="event-detail.js"></script>
 </body>
 </html>

@@ -10,10 +10,9 @@ if (!eventId) {
 }
 
 let currentEvent = null;
-
 const NO_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 300 160'%3E%3Crect fill='%231e293b' width='300' height='160'/%3E%3Ctext fill='%2394a3b8' x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-family='sans-serif' font-size='20'%3ENo Image%3C/text%3E%3C/svg%3E";
 
-// 초기 실행 (여기서는 loadEventDetail만 먼저 호출합니다)
+// 초기 실행
 loadEventDetail();
 
 async function loadEventDetail() {
@@ -22,14 +21,12 @@ async function loadEventDetail() {
         if (!res.ok) throw new Error('이벤트 로드 실패');
         
         const evt = await res.json();
-        currentEvent = evt; // ★ 이벤트 정보 저장 완료
+        currentEvent = evt; // 이벤트 정보 저장
 
-        // ★ [핵심 수정] 이벤트 정보를 받은 뒤에 참여자/댓글 목록을 불러옵니다.
-        // 그래야 currentEvent.eventType을 확인해서 로또 개수를 표시할 수 있습니다.
         loadParticipants();
         loadComments();
 
-        // --- UI 렌더링 시작 ---
+        // UI 렌더링
         document.getElementById('evtTitle').innerText = evt.title;
         document.getElementById('evtAuthor').innerText = `👑 ${evt.author}`;
         
@@ -68,23 +65,22 @@ async function loadEventDetail() {
         const isCalcPeriod = (evt.calcStartDate && new Date(evt.calcStartDate) <= now);
         if (isAdmin && evt.eventType === 'custom' && isCalcPeriod) {
             document.getElementById('adminWinnerPanel').classList.remove('hidden');
-            
             if (currentEvent.prizes && currentEvent.prizes.length > 0) {
                 document.getElementById('rewardName').classList.add('hidden');
             } else {
                 document.getElementById('rewardName').classList.remove('hidden');
             }
-
             loadCandidates(); 
             loadParticipantCandidates();
         }
 
-        // UI 분기 처리
+        // UI 분기 처리 (로또 vs 숫자 뽑기 vs 일반)
         const joinBtn = document.getElementById('joinBtn');
         const normalPrizeBox = document.getElementById('normalPrizeBox');
         const lottoInfoBox = document.getElementById('lottoInfoBox');
         const visibilityBadge = document.getElementById('lottoVisibility');
 
+        // A. 로또 이벤트
         if (evt.eventType === 'lotto' && evt.lottoConfig) {
             normalPrizeBox.classList.add('hidden'); 
             visibilityBadge.classList.remove('hidden');
@@ -108,7 +104,39 @@ async function loadEventDetail() {
                 joinBtn.onclick = joinCurrentEvent;
             }
 
-        } else {
+        } 
+        // B. [NEW] 제일 높은 숫자 뽑기 이벤트
+        else if (evt.eventType === 'highest_number') {
+            visibilityBadge.classList.add('hidden');
+            normalPrizeBox.classList.remove('hidden');
+            lottoInfoBox.classList.add('hidden');
+
+            const prizeList = document.getElementById('prizeList');
+            prizeList.innerHTML = '';
+            if(evt.prizes && evt.prizes.length > 0) {
+                evt.prizes.forEach(p => {
+                    prizeList.innerHTML += `
+                        <div class="prize-item">
+                            <span class="rank-badge">${p.label}</span>
+                            <span>${p.reward}</span>
+                        </div>`;
+                });
+            } else {
+                prizeList.innerHTML = '<p style="color:#666;">등록된 상품이 없습니다.</p>';
+            }
+
+            if (isEnded) {
+                joinBtn.innerText = '마감되었습니다';
+                joinBtn.disabled = true;
+                joinBtn.style.background = '#475569';
+            } else {
+                joinBtn.innerText = '🎲 숫자 뽑고 랭킹 등록하기';
+                // 전용 참여 함수 연결
+                joinBtn.onclick = joinHighestNumberEvent;
+            }
+        } 
+        // C. 일반/커스텀 이벤트
+        else {
             visibilityBadge.classList.add('hidden');
             normalPrizeBox.classList.remove('hidden');
             lottoInfoBox.classList.add('hidden');
@@ -180,6 +208,7 @@ function renderLottoStats(config) {
 
 async function handleMainAction() { /* fallback */ }
 
+// 일반 참여 함수
 async function joinCurrentEvent() {
     if (!token) return alert('로그인이 필요합니다.');
     const title = document.getElementById('evtTitle').innerText;
@@ -196,6 +225,40 @@ async function joinCurrentEvent() {
             if (data.tickets !== undefined) alert(`참여 완료!\n🎰 로또 ${data.tickets}개를 획득했습니다.\n(결과 확인 버튼을 눌러보세요!)`);
             else alert('참여 신청이 완료되었습니다!');
             loadParticipants(); 
+        } else {
+            alert(data.message);
+        }
+    } catch (err) {
+        alert('서버 오류 발생');
+    }
+}
+
+// [NEW] 숫자 뽑기 참여 함수
+async function joinHighestNumberEvent() {
+    if (!token) return alert('로그인이 필요합니다.');
+    const title = document.getElementById('evtTitle').innerText;
+
+    if (!confirm(`'${title}' 이벤트에 참여하여 숫자를 뽑으시겠습니까?`)) return;
+
+    try {
+        const res = await fetch('/api/apply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ eventId, eventTitle: title })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+            // 서버에서 뽑은 숫자(data.drawnNumber)로 애니메이션 실행
+            if (typeof playNumberAnimation === 'function' && data.drawnNumber) {
+                playNumberAnimation(data.drawnNumber, () => {
+                    // 확인 버튼 누르면 리스트 갱신
+                    loadParticipants();
+                });
+            } else {
+                alert(`참여 완료! 뽑은 숫자: ${data.drawnNumber}`);
+                loadParticipants();
+            }
         } else {
             alert(data.message);
         }
@@ -224,6 +287,7 @@ async function checkLottoResult() {
     } catch(e) { alert('오류'); }
 }
 
+// ★ loadParticipants 함수 (쪽지 버튼 추가됨)
 async function loadParticipants() {
     try {
         const res = await fetch(`/api/events/${eventId}/participants`);
@@ -232,13 +296,24 @@ async function loadParticipants() {
         const tbody = document.getElementById('partList');
         tbody.innerHTML = '';
         
+        // 숫자 뽑기 이벤트인 경우 랭킹 표시
+        if (currentEvent?.eventType === 'highest_number' && typeof renderHighestRanking === 'function') {
+            renderHighestRanking(parts);
+        } else {
+            const rankArea = document.getElementById('customRankingArea');
+            if(rankArea) rankArea.classList.add('hidden');
+        }
+
         const myEntry = parts.find(p => p.userName === myNickname);
         const ticketInfoDiv = document.getElementById('myTicketInfo');
         
-        // ★ 이제 currentEvent가 확실히 로드된 상태이므로 로또 여부를 정확히 판단 가능
         if (myEntry && currentEvent?.eventType === 'lotto') {
             ticketInfoDiv.innerText = `🎰 내 로또 개수: ${myEntry.ticketCount}개`;
-        } else { ticketInfoDiv.innerText = ''; }
+        } else if (myEntry && currentEvent?.eventType === 'highest_number') {
+            ticketInfoDiv.innerText = `🎲 내 숫자: ${myEntry.ticketCount}`;
+        } else { 
+            ticketInfoDiv.innerText = ''; 
+        }
 
         if (parts.length === 0) {
             tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">아직 참여자가 없습니다.</td></tr>';
@@ -250,6 +325,8 @@ async function loadParticipants() {
             
             if (currentEvent?.eventType === 'lotto') {
                 extraInfo += ` <span style="color:#f39c12; font-size:0.9rem; font-weight:bold;">(🎰 ${p.ticketCount}개)</span>`;
+            } else if (currentEvent?.eventType === 'highest_number') {
+                extraInfo += ` <span style="color:#2ecc71; font-weight:bold;">[${p.ticketCount}]</span>`;
             }
 
             if (currentEvent?.eventType === 'lotto' && p.drawResults && p.drawResults.length > 0) {
@@ -257,7 +334,18 @@ async function loadParticipants() {
                 if (wins.length > 0) extraInfo += ` <span style="color:#f43f5e; font-weight:bold;">[🎁 ${wins.join(', ')}]</span>`;
                 else extraInfo += ` <span style="color:#64748b; font-size:0.85rem;">(꽝)</span>`;
             }
-            tbody.innerHTML += `<tr><td>${index + 1}</td><td><strong>${p.userName}</strong>${extraInfo}</td><td style="color:#94a3b8; font-size:0.9rem;">${formatDateDetail(p.appliedAt)}</td></tr>`;
+
+            // ★ [NEW] 관리자용 쪽지 버튼 추가
+            let mailBtn = '';
+            if (isAdmin && p.userName !== myNickname) {
+                mailBtn = `<button onclick="openSendMailModal('${p.userId}', '${p.userName}')" style="margin-left:8px; background:none; border:1px solid #3b82f6; color:#3b82f6; border-radius:4px; padding:2px 6px; font-size:0.75rem; cursor:pointer;">📩 쪽지</button>`;
+            }
+
+            tbody.innerHTML += `<tr>
+                <td>${index + 1}</td>
+                <td><strong>${p.userName}</strong>${extraInfo} ${mailBtn}</td>
+                <td style="color:#94a3b8; font-size:0.9rem;">${formatDateDetail(p.appliedAt)}</td>
+            </tr>`;
         });
     } catch (err) { console.error(err); }
 }
@@ -477,4 +565,103 @@ function formatDateDetail(isoString) {
     hours = hours % 12;
     hours = hours ? hours : 12; 
     return `${year}.${month}.${day}. ${ampm} ${hours}:${minutes}`;
+}
+
+
+// --- [NEW] 당첨자 개별 지정 로직 (숫자 뽑기용) ---
+
+let selectedWinnerId = null;
+let selectedWinnerName = null;
+
+function openPrizeModal(userId, nickname) {
+    selectedWinnerId = userId;
+    selectedWinnerName = nickname;
+    
+    document.getElementById('targetWinnerName').innerText = nickname;
+    const selector = document.getElementById('prizeSelector');
+    selector.innerHTML = '';
+
+    if (currentEvent.prizes && currentEvent.prizes.length > 0) {
+        currentEvent.prizes.forEach(p => {
+            selector.innerHTML += `<option value="${p.label} (${p.reward})">${p.label} - ${p.reward}</option>`;
+        });
+    } else {
+        selector.innerHTML = `<option value="특별 상품">특별 상품 (설정된 상품 없음)</option>`;
+    }
+
+    document.getElementById('prizeSelectModal').classList.remove('hidden');
+}
+
+async function confirmGivePrize() {
+    const reward = document.getElementById('prizeSelector').value;
+    
+    if (!confirm(`${selectedWinnerName}님에게 '${reward}'을(를) 지급하시겠습니까?`)) return;
+
+    try {
+        const res = await fetch(`/api/events/${eventId}/winner/add`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ 
+                userId: selectedWinnerId, 
+                nickname: selectedWinnerName, 
+                reward: reward 
+            })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            alert(data.message);
+            document.getElementById('prizeSelectModal').classList.add('hidden');
+            location.reload(); 
+        } else {
+            alert(data.message);
+        }
+    } catch (e) {
+        console.error(e);
+        alert('오류가 발생했습니다.');
+    }
+}
+
+// --- [NEW] 쪽지 보내기 로직 ---
+
+let targetReceiverId = null;
+
+function openSendMailModal(userId, nickname) {
+    targetReceiverId = userId;
+    document.getElementById('targetUserName').innerText = nickname;
+    document.getElementById('mailSubject').value = ''; 
+    document.getElementById('mailContent').value = ''; 
+    
+    document.getElementById('sendMailModal').classList.remove('hidden');
+}
+
+async function sendMail() {
+    const subject = document.getElementById('mailSubject').value;
+    const content = document.getElementById('mailContent').value;
+
+    if (!subject.trim() || !content.trim()) return alert('제목과 내용을 모두 입력하세요.');
+    if (!confirm('쪽지를 보내시겠습니까?')) return;
+
+    try {
+        const res = await fetch('/api/mail/send', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ receiverId: targetReceiverId, subject, content })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+            alert(data.message);
+            document.getElementById('sendMailModal').classList.add('hidden');
+        } else {
+            alert(data.message);
+        }
+    } catch (e) { alert('전송 실패'); }
 }

@@ -72,7 +72,7 @@ router.delete('/:id', authenticateToken, checkAdmin, async (req, res) => {
     }
 });
 
-// ★ [수정됨] 7. 수동 당첨자 저장 (관리자) - 참여 내역 자동 생성 로직 추가
+// 7. 수동 당첨자 저장 (관리자) - 일괄 처리용 (기존 로직 유지)
 router.post('/:id/winners', authenticateToken, checkAdmin, async (req, res) => {
     try {
         const { winners } = req.body; // [{ userId, nickname, reward }, ...]
@@ -85,32 +85,79 @@ router.post('/:id/winners', authenticateToken, checkAdmin, async (req, res) => {
         event.manualWinners = winners;
         await event.save();
 
-        // 2. 기존 당첨 내역 초기화 (재선정 시 기존 당첨자 취소 처리를 위해)
-        // 해당 이벤트의 모든 참여 내역에서 당첨 결과를 비웁니다.
+        // 2. 기존 당첨 내역 초기화
         await Application.updateMany({ eventId: eventId }, { $set: { drawResults: [] } });
 
-        // 3. 새로운 당첨자들에게 당첨 내역 기록 (참여 내역이 없으면 자동 생성)
+        // 3. 새로운 당첨자들에게 당첨 내역 기록
         for (const w of winners) {
             let app = await Application.findOne({ eventId: eventId, userId: w.userId });
 
-            // ★ 참여 내역이 없다면(댓글만 쓰고 참여 버튼 안 누른 경우) -> 자동 생성
             if (!app) {
                 app = new Application({
                     eventId: eventId,
                     eventTitle: event.title,
                     userId: w.userId,
                     userName: w.nickname,
-                    ticketCount: 0, // 커스텀 이벤트는 보통 로또 개념 없음
+                    ticketCount: 0,
                     appliedAt: new Date()
                 });
             }
 
-            // 당첨 결과 기록
             app.drawResults = [w.reward];
             await app.save();
         }
 
-        res.json({ message: '당첨자가 확정되었습니다. (명예의 전당 반영 완료)', manualWinners: event.manualWinners });
+        res.json({ message: '당첨자가 확정되었습니다.', manualWinners: event.manualWinners });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: '저장 실패' });
+    }
+});
+
+// ★ [NEW] 단일 당첨자 추가 (랭킹 리스트에서 개별 지급용)
+router.post('/:id/winner/add', authenticateToken, checkAdmin, async (req, res) => {
+    try {
+        const { userId, nickname, reward } = req.body;
+        const eventId = req.params.id;
+
+        const event = await Event.findById(eventId);
+        if (!event) return res.status(404).json({ message: '이벤트 없음' });
+
+        // 1. 이미 당첨된 유저인지 확인 (중복 지급 방지)
+        const alreadyWinner = event.manualWinners.find(w => w.userId === userId);
+        if (alreadyWinner) {
+            return res.status(400).json({ message: '이미 상품이 지급된 유저입니다.' });
+        }
+
+        // 2. 이벤트 모델에 당첨자 추가
+        event.manualWinners.push({
+            userId,
+            nickname,
+            content: '랭킹 당첨',
+            reward
+        });
+        await event.save();
+
+        // 3. 해당 유저의 Application(참여 내역)에 당첨 정보 업데이트
+        let app = await Application.findOne({ eventId: eventId, userId: userId });
+        
+        // 만약 참여 내역이 없다면 생성 (예외 처리)
+        if (!app) {
+            app = new Application({
+                eventId,
+                eventTitle: event.title,
+                userId,
+                userName: nickname,
+                ticketCount: 0,
+                appliedAt: new Date()
+            });
+        }
+
+        // 당첨 결과 기록 (기존 내역 유지하면서 추가하거나, 덮어쓰기)
+        app.drawResults = [reward]; 
+        await app.save();
+
+        res.json({ message: `${nickname}님에게 [${reward}] 지급 완료!` });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: '저장 실패' });

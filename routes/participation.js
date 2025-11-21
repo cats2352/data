@@ -4,7 +4,7 @@ const Event = require('../models/Event');
 const Application = require('../models/Application');
 const { authenticateToken } = require('../middleware/auth');
 
-// 1. 이벤트 참여 (기존 동일)
+// 1. 이벤트 참여
 router.post('/apply', authenticateToken, async (req, res) => {
     try {
         const { eventId, eventTitle } = req.body;
@@ -14,19 +14,21 @@ router.post('/apply', authenticateToken, async (req, res) => {
         let app = await Application.findOne({ eventId, userId });
         const now = new Date();
 
+        // 이미 참여했는지 체크
         if (app) {
             if (event.lottoConfig && event.lottoConfig.frequency === 'daily') {
                 const lastDate = new Date(app.lastAppliedAt).toDateString();
                 const today = now.toDateString();
-                if (lastDate === today) {
-                    return res.status(400).json({ message: '오늘은 이미 참여했습니다. 내일 다시 오세요!' });
-                }
+                if (lastDate === today) return res.status(400).json({ message: '오늘은 이미 참여했습니다.' });
             } else {
                 return res.status(400).json({ message: '이미 참여한 이벤트입니다.' });
             }
         }
 
-        let gotTickets = 0;
+        // [수정] 이벤트 타입별 로직 분기
+        let storedValue = 0; // 로또는 티켓수, 숫자뽑기는 뽑은 숫자
+
+        // A. 로또 이벤트
         if (event.eventType === 'lotto' && event.lottoConfig) {
             const rates = event.lottoConfig.ticketRates;
             const rand = Math.random() * 100;
@@ -34,14 +36,19 @@ router.post('/apply', authenticateToken, async (req, res) => {
             for (const item of rates) {
                 cumulative += item.rate;
                 if (rand <= cumulative) {
-                    gotTickets = item.count;
+                    storedValue = item.count;
                     break;
                 }
             }
+        } 
+        // B. [NEW] 제일 높은 숫자 뽑기 이벤트
+        else if (event.eventType === 'highest_number') {
+            // 1 ~ 99999 랜덤 생성
+            storedValue = Math.floor(Math.random() * 99999) + 1;
         }
 
         if (app) {
-            app.ticketCount += gotTickets;
+            app.ticketCount += storedValue; // 로또일 경우 누적
             app.lastAppliedAt = now;
             await app.save();
         } else {
@@ -50,20 +57,26 @@ router.post('/apply', authenticateToken, async (req, res) => {
                 eventTitle, 
                 userId, 
                 userName: req.user.nickname,
-                ticketCount: gotTickets, 
+                ticketCount: storedValue, // 여기 저장됩니다
                 lastAppliedAt: now
             });
             await app.save();
         }
 
-        res.json({ message: `참여 완료!`, tickets: gotTickets });
+        // 응답에 결과값 포함
+        res.json({ 
+            message: `참여 완료!`, 
+            tickets: event.eventType === 'lotto' ? storedValue : undefined,
+            drawnNumber: event.eventType === 'highest_number' ? storedValue : undefined
+        });
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: '참여 처리 중 오류 발생' });
     }
 });
 
-// 2. 내 신청 내역 조회 (★ 수정됨: 이벤트 타입 및 기간 정보 추가)
+// 2. 내 신청 내역 조회 (기존 유지)
 router.get('/my-apps', authenticateToken, async (req, res) => {
     try {
         const myApps = await Application.find({ userId: req.user.id });
@@ -75,16 +88,13 @@ router.get('/my-apps', authenticateToken, async (req, res) => {
                 await Application.findByIdAndDelete(app._id);
             } else {
                 const appData = app.toObject(); 
-                // ★ 핵심: 이벤트의 타입과 시간 정보를 같이 보냄
                 appData.eventEndDate = event.endDate; 
                 appData.eventType = event.eventType;
                 appData.calcStartDate = event.calcStartDate;
                 appData.calcEndDate = event.calcEndDate;
-                
                 activeApps.push(appData);
             }
         }
-        
         activeApps.sort((a, b) => new Date(b.appliedAt) - new Date(a.appliedAt));
         res.json(activeApps);
     } catch (err) {
@@ -92,8 +102,9 @@ router.get('/my-apps', authenticateToken, async (req, res) => {
     }
 });
 
-// 3. 당첨 결과 확인 (기존 동일)
+// 3. 당첨 결과 확인 (기존 유지)
 router.post('/lotto/draw', authenticateToken, async (req, res) => {
+    // ... (기존 코드 동일) ...
     try {
         const { eventId } = req.body;
         const app = await Application.findOne({ eventId, userId: req.user.id });

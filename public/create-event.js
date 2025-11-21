@@ -111,7 +111,7 @@ function handleTypeChange() {
     const lottoSettingArea = document.getElementById('lottoSettingArea');
     const customTypeArea = document.getElementById('customTypeArea');
     
-    if (!isEditMode) lottoSettingArea.innerHTML = ''; 
+    if (!isEditMode && lottoSettingArea) lottoSettingArea.innerHTML = ''; 
 
     if (type === 'lotto') {
         if(normalPrizeArea) normalPrizeArea.classList.add('hidden');
@@ -124,13 +124,17 @@ function handleTypeChange() {
         if(normalPrizeArea) normalPrizeArea.classList.remove('hidden');
         if(customTypeArea) customTypeArea.classList.remove('hidden');
         if(lottoSettingArea) lottoSettingArea.innerHTML = ''; 
+    } else if (type === 'highest_number') {
+        // [NEW] 숫자 뽑기는 상품 목록만 있으면 됨 (커스텀/로또 설정 숨김)
+        if(normalPrizeArea) normalPrizeArea.classList.remove('hidden');
+        if(customTypeArea) customTypeArea.classList.add('hidden');
+        if(lottoSettingArea) lottoSettingArea.innerHTML = '';
     } else {
         if(normalPrizeArea) normalPrizeArea.classList.remove('hidden');
         if(customTypeArea) customTypeArea.classList.add('hidden');
         if(lottoSettingArea) lottoSettingArea.innerHTML = '';
     }
 }
-
 function changePrizeMode(mode) { 
     currentMode = mode; 
     if(!isEditMode) resetPrizeFields();
