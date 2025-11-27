@@ -324,6 +324,7 @@ app.put('/api/decks/:id/comments/:commentId/replies/:replyId/like', async (req, 
 // 13. 사용자 목록 조회 API (통계 포함)
 app.get('/api/users', async (req, res) => {
     try {
+        await connectDB(); // ★ [필수] 이 줄을 꼭 추가해야 합니다!
         const users = await User.find().select('-password'); // 비밀번호 제외하고 조회
         const decks = await Deck.find(); // 통계 계산을 위해 모든 덱 조회
 
