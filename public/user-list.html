@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPTC 커뮤니티 - 사용자 목록</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/user-list.css"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-left">
+            <a href="index.html" class="logo">OPTC 커뮤니티</a>
+        </div>
+        <div class="nav-right">
+            <button id="theme-toggle" class="icon-btn"><i class="fa-solid fa-moon"></i></button>
+            <a href="login.html" class="login-btn">로그인/회원가입</a>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="user-list-wrapper">
+            <h2><i class="fa-solid fa-users"></i> 사용자 목록</h2>
+            <p class="page-desc">함께 활동하는 선장님들을 확인하세요!</p>
+
+            <div class="table-container">
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>닉네임</th>
+                            <th>덱 작성</th>
+                            <th>받은 좋아요</th>
+                            <th>댓글 수</th>
+                            <th>가입일</th>
+                            <th class="admin-col hidden">관리</th> </tr>
+                    </thead>
+                    <tbody id="user-table-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/script.js"></script>
+    <script src="js/user-list.js"></script>
+</body>
+</html>

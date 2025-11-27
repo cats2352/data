@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPTC 커뮤니티 - 덱 공유</title>
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/deck-share.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-left">
+            <a href="index.html" class="logo">OPTC 커뮤니티</a>
+            <span class="version">v1.0.1</span>
+        </div>
+        <div class="nav-right">
+            <a href="user-list.html" class="icon-btn" title="사용자 목록">
+                <i class="fa-solid fa-users"></i>
+            </a>
+            <button id="theme-toggle" class="icon-btn">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+            <button class="icon-btn hamburger">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <a href="login.html" class="login-btn">로그인/회원가입</a>
+        </div>
+    </header>
+
+    <main class="container">
+        
+        <div id="search-sidebar" class="search-sidebar">
+            <div class="sidebar-header">
+                <h2>상세 검색</h2>
+                <button id="close-search-btn" class="icon-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="sidebar-content">
+                <div class="filter-group">
+                    <label>덱 제목</label>
+                    <input type="text" id="filter-title" placeholder="제목 검색">
+                </div>
+
+                <div class="filter-group">
+                    <label>작성자 닉네임</label>
+                    <input type="text" id="filter-writer" placeholder="닉네임 검색">
+                </div>
+
+                <div class="filter-group">
+                    <label>작성 기간</label>
+                    <div class="date-range">
+                        <input type="date" id="filter-date-start">
+                        <span>~</span>
+                        <input type="date" id="filter-date-end">
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label>컨텐츠 종류</label>
+                    <select id="filter-main-content">
+                        <option value="">전체</option>
+                        <option value="pirate_festival">해적제</option>
+                        <option value="kizuna">유대결전</option>
+                        <option value="treasure_map">트레저맵</option>
+                        <option value="coop">공동전투</option>
+                        <option value="pirate_trail">해적왕의 궤적</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>세부 이벤트</label>
+                    <select id="filter-sub-content" disabled>
+                        <option value="">상위 컨텐츠를 먼저 선택하세요</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <button id="reset-search-btn" class="reset-btn">초기화</button>
+                <button id="apply-search-btn" class="apply-btn">검색 적용</button>
+            </div>
+        </div>
+
+        <div id="search-overlay" class="search-overlay hidden"></div>
+
+        <div class="deck-wrapper">
+
+            <section class="deck-banner">
+                <div class="banner-content">
+                    <h1>덱 공유</h1>
+                    <p>자신만의 강력한 덱을 공유하거나 다양한 전략을 확인해 보세요!</p>
+                </div>
+            </section>
+
+            <section class="deck-controls">
+                <div class="control-left">
+                    </div>
+                <div class="control-right">
+                    <button class="search-btn"><i class="fa-solid fa-magnifying-glass"></i> 덱 상세검색</button>
+                    <a href="#" class="write-btn"><i class="fa-solid fa-pen-to-square"></i> 덱 작성하기</a>
+                </div>
+            </section>
+
+            <section class="deck-sort-bar">
+                <div class="sort-options">
+                    <span class="active">최신 순</span> <span>|</span>
+                    <span>인기 순</span>
+                </div>
+            </section>
+
+            <section class="deck-list-container" id="deck-list">
+                <div class="empty-message">
+                    <i class="fa-solid fa-box-open"></i>
+                    <p>등록된 덱이 로딩될 예정입니다.</p>
+                </div>
+            </section>
+
+        </div> </main>
+
+    <footer class="footer">
+        <p>All copyrights belong to TEAM OPTC.<br>This is an unofficial fansite.</p>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script src="js/deck.js"></script>
+</body>
+</html>

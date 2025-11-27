@@ -1,0 +1,408 @@
+/* --- 덱 공유 페이지 전용 스타일 --- */
+
+/* 전체를 감싸는 래퍼: 세로 정렬 보장 */
+.deck-wrapper {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* 1. 상단 배너 */
+.deck-banner {
+    width: 100%;
+    background: linear-gradient(135deg, #1e232e, #12151a);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 3rem 1rem;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.banner-content h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+.banner-content p {
+    color: var(--sub-text-color);
+    font-size: 0.95rem;
+}
+
+/* 2. 컨트롤 바 (검색, 작성 버튼) */
+.deck-controls {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.control-right {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+}
+
+/* 검색 버튼 */
+.search-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--sub-text-color);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 0.9rem;
+}
+.search-btn:hover {
+    border-color: var(--text-color);
+    color: var(--text-color);
+}
+
+/* 작성하기 버튼 */
+.write-btn {
+    background-color: var(--btn-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.write-btn:hover {
+    background-color: var(--btn-hover);
+}
+
+/* 3. 정렬 바 (인기순 | 최신순) */
+.deck-sort-bar {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    font-size: 0.85rem;
+    color: var(--sub-text-color);
+}
+
+.sort-options span {
+    margin-left: 8px;
+    cursor: pointer;
+}
+.sort-options span.active {
+    color: var(--accent-color);
+    font-weight: bold;
+}
+.sort-options span:hover {
+    color: var(--text-color);
+}
+
+/* 4. 덱 리스트 컨테이너 */
+.deck-list-container {
+    width: 100%;
+    min-height: 300px;
+}
+
+.empty-message {
+    text-align: center;
+    padding: 4rem;
+    color: var(--sub-text-color);
+}
+.empty-message i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+}
+
+/* --- 덱 카드 리스트 스타일 (그리드) --- */
+.deck-grid-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding-bottom: 50px;
+}
+
+/* 카드 본체 */
+.deck-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.deck-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    border-color: var(--accent-color);
+}
+
+/* 카드 헤더 */
+.deck-card-header {
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    position: relative;
+}
+
+.badge-main {
+    background-color: var(--accent-color);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.badge-sub {
+    background-color: var(--btn-bg);
+    border: 1px solid var(--border-color);
+    color: var(--sub-text-color);
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+/* 관리 버튼 그룹 (수정/삭제) */
+.manage-btns {
+    margin-left: auto;
+    display: flex;
+    gap: 5px;
+}
+
+.edit-btn, .delete-btn {
+    background: transparent;
+    border: none;
+    color: var(--sub-text-color);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: 0.2s;
+    padding: 4px;
+}
+
+.edit-btn:hover { color: #58a6ff; }
+.delete-btn:hover { color: #ff6b6b; }
+
+/* 카드 본문 */
+.deck-card-body {
+    padding: 15px;
+    flex: 1;
+}
+
+.deck-title {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.deck-meta {
+    font-size: 0.8rem;
+    color: var(--sub-text-color);
+    display: flex;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.deck-preview-images {
+    display: flex;
+    gap: 5px;
+    height: 50px;
+}
+
+.deck-preview-images img, .empty-slot {
+    width: 50px;
+    height: 50px;
+    border-radius: 4px;
+    object-fit: cover;
+    background-color: var(--btn-bg);
+    border: 1px solid var(--border-color);
+}
+
+/* 카드 푸터 */
+.deck-card-footer {
+    padding: 10px 15px;
+    background-color: rgba(0,0,0,0.2);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ★ [추가] 좋아요와 댓글을 묶는 그룹 */
+.stats-group {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* 아이콘 사이 간격 */
+}
+
+.like-btn {
+    background: transparent;
+    border: none;
+    color: var(--sub-text-color);
+    cursor: pointer;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: 0.2s;
+    padding: 0; /* 불필요한 패딩 제거 */
+}
+
+/* ★ [추가] 댓글 수 스타일 */
+.comment-stat {
+    color: var(--sub-text-color);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.like-btn:hover { color: var(--accent-color); }
+
+.like-btn.active {
+    color: #ff4757;
+    font-weight: bold;
+}
+/* ... 이후 애니메이션 등 기존 코드 유지 ... */
+.like-btn.active i { animation: heartPop 0.3s ease-out; }
+
+@keyframes heartPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+
+.detail-btn {
+    background-color: var(--btn-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.detail-btn:hover { background-color: var(--btn-hover); }
+
+
+/* --- 상세 검색 사이드바 스타일 --- */
+
+/* 배경 오버레이 */
+.search-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.3s;
+}
+.search-overlay.active { opacity: 1; visibility: visible; }
+
+/* 사이드바 본체 */
+.search-sidebar {
+    position: fixed;
+    top: 0; left: -320px;
+    width: 320px;
+    height: 100%;
+    background-color: var(--card-bg);
+    border-right: 1px solid var(--border-color);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transition: left 0.3s ease-in-out;
+    box-shadow: 2px 0 15px rgba(0,0,0,0.5);
+}
+
+.search-sidebar.active { left: 0; }
+
+.sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.sidebar-header h2 { font-size: 1.2rem; color: var(--text-color); }
+
+.sidebar-content {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+}
+
+.filter-group { margin-bottom: 1.5rem; }
+.filter-group label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--sub-text-color);
+    margin-bottom: 8px;
+}
+
+.filter-group input[type="text"],
+.filter-group select,
+.filter-group input[type="date"] {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background-color: var(--btn-bg);
+    color: var(--text-color);
+    outline: none;
+}
+.filter-group select:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.date-range { display: flex; align-items: center; gap: 5px; }
+.date-range span { color: var(--sub-text-color); }
+
+.sidebar-footer {
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 10px;
+}
+
+.reset-btn {
+    flex: 1;
+    padding: 12px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--sub-text-color);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.reset-btn:hover { color: var(--text-color); border-color: var(--text-color); }
+
+.apply-btn {
+    flex: 2;
+    padding: 12px;
+    background-color: var(--accent-color);
+    border: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.apply-btn:hover { opacity: 0.9; }
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+    .banner-content h1 { font-size: 1.5rem; }
+    .search-btn, .write-btn { font-size: 0.8rem; padding: 6px 12px; }
+    .search-sidebar { width: 100%; max-width: 320px; } /* 모바일에서도 너무 넓지 않게 */
+}

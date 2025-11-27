@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPTC 커뮤니티 - 로그인</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-left">
+            <a href="index.html" class="logo">OPTC 커뮤니티</a>
+        </div>
+        <div class="nav-right">
+            <a href="user-list.html" class="icon-btn" title="사용자 목록">
+                <i class="fa-solid fa-users"></i>
+            </a>
+            <button id="theme-toggle" class="icon-btn">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="grid-wrapper" style="max-width: 400px;"> <article class="card auth-card" id="register-section">
+                <div class="card-content">
+                    <h2>회원가입</h2>
+                    <p>닉네임으로 간편하게 시작하세요!</p>
+                    
+                    <form id="register-form">
+                        <div class="input-group">
+                            <label>닉네임</label>
+                            <input type="text" id="reg-nickname" placeholder="최대 10글자" maxlength="10" required>
+                        </div>
+                        <div class="input-group">
+                            <label>비밀번호</label>
+                            <input type="password" id="reg-password" placeholder="4자리 이상 (한글 불가)" minlength="4" required>
+                        </div>
+                        <button type="submit" class="go-btn full-width">가입 완료</button>
+                    </form>
+
+                    <div class="auth-switch">
+                        이미 계정이 있으신가요? <span id="go-to-login">로그인하기</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="card auth-card hidden" id="login-section">
+                <div class="card-content">
+                    <h2>로그인</h2>
+                    <p>반갑습니다, 선장님!</p>
+                    
+                    <form id="login-form">
+                        <div class="input-group">
+                            <label>닉네임</label>
+                            <input type="text" id="login-nickname" placeholder="닉네임 입력" required>
+                        </div>
+                        <div class="input-group">
+                            <label>비밀번호</label>
+                            <input type="password" id="login-password" placeholder="비밀번호 입력" required>
+                        </div>
+
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="remember-me">
+                            <label for="remember-me">닉네임/비밀번호 기억하기</label>
+                        </div>
+
+                        <button type="submit" class="go-btn full-width">로그인</button>
+                    </form>
+
+                    <div class="auth-switch">
+                        아직 회원이 아니신가요? <span id="go-to-register">회원가입하기</span>
+                    </div>
+                </div>
+            </article>
+
+        </div>
+    </main>
+
+    <script src="js/script.js"></script> <script src="js/login.js"></script>   </body>
+</html>

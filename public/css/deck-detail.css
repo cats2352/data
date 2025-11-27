@@ -1,0 +1,378 @@
+/* --- 덱 상세 페이지 스타일 --- */
+
+.detail-wrapper {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding-bottom: 4rem;
+}
+
+/* 1. 헤더 영역 */
+.back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    color: var(--sub-text-color);
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+.back-link:hover { color: var(--text-color); }
+
+.header-content {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1.5rem;
+}
+
+.badges { display: flex; gap: 8px; margin-bottom: 10px; }
+.badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+.badge.main { background-color: var(--accent-color); color: white; }
+.badge.sub { background-color: var(--btn-bg); color: var(--sub-text-color); border: 1px solid var(--border-color); }
+
+#detail-title { font-size: 1.8rem; color: var(--text-color); margin-bottom: 10px; }
+
+.meta-info {
+    display: flex; gap: 15px; color: var(--sub-text-color); font-size: 0.9rem;
+}
+.like-info { color: #ff6b6b; }
+
+/* 2. 섹션 공통 */
+.detail-section h3 {
+    font-size: 1.1rem;
+    color: var(--text-color);
+    margin-bottom: 1rem;
+    border-left: 4px solid var(--accent-color);
+    padding-left: 10px;
+}
+
+/* 3. 설명 박스 */
+.description-box p {
+    background-color: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    line-height: 1.6;
+    color: var(--text-color);
+    white-space: pre-wrap; /* 줄바꿈 보존 */
+}
+
+/* 4. 캐릭터 배치 (보기 전용) */
+.formation-view {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center; /* 가운데 정렬 */
+}
+
+.formation-label {
+    width: 100%;
+    font-size: 0.9rem;
+    color: var(--sub-text-color);
+    margin-bottom: 5px;
+    text-align: left; /* 라벨은 왼쪽 정렬 */
+    max-width: 440px; /* 그리드 너비에 맞춤 (80*5 + 10*4) */
+}
+
+.formation-row {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-start; /* 왼쪽부터 채움 */
+    width: 100%;
+    max-width: 440px; /* 5칸 너비 제한 */
+}
+
+.view-slot {
+    width: 80px;
+    height: 80px;
+    background-color: var(--btn-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.view-slot img { width: 100%; height: 100%; object-fit: cover; }
+
+/* 5. 역할 리스트 */
+.role-view-list { display: flex; flex-direction: column; gap: 10px; }
+
+.role-view-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background-color: var(--card-bg);
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.role-thumb { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; }
+.role-text {
+    flex: 1;
+    color: var(--text-color);
+    font-size: 0.95rem;
+}
+.role-char-name {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--sub-text-color);
+    margin-bottom: 4px;
+}
+
+/* --- 라운드별 공략 보기 스타일 (최신 스타일 적용) --- */
+
+.round-detail-box {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.round-detail-header {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--text-color);
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+/* 라운드 캐릭터 리스트 (2열 그리드) */
+.round-detail-chars {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* PC: 2개씩 가로 배치 */
+    gap: 10px;
+    margin-bottom: 1rem;
+    background-color: var(--bg-color);
+    padding: 10px;
+    border-radius: 8px;
+}
+
+/* 캐릭터 카드 아이템 */
+.round-char-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background-color: var(--btn-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.round-char-card img {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid rgba(0,0,0,0.2);
+}
+
+.round-char-card span {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    line-height: 1.2;
+    word-break: keep-all;
+}
+
+/* 라운드 설명 텍스트 */
+.round-detail-desc {
+    font-size: 0.95rem;
+    color: var(--text-color);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    padding: 10px;
+    background-color: var(--bg-color);
+    border-radius: 8px;
+}
+
+/* --- 댓글 섹션 스타일 --- */
+
+.comment-section { margin-top: 3rem; border-top: 1px solid var(--border-color); padding-top: 2rem; }
+
+/* 작성 폼 */
+.comment-form {
+    display: flex; gap: 10px; margin-bottom: 1.5rem;
+}
+.comment-form textarea {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background-color: var(--btn-bg);
+    color: var(--text-color);
+    resize: none;
+    outline: none;
+}
+.comment-form textarea:focus { border-color: var(--accent-color); }
+.comment-form button {
+    padding: 0 20px;
+    background-color: var(--accent-color);
+    color: white; border: none; border-radius: 8px;
+    cursor: pointer; font-weight: bold;
+}
+
+/* 정렬 탭 */
+.comment-sort {
+    display: flex; gap: 15px; margin-bottom: 1.5rem;
+    font-size: 0.85rem; color: var(--sub-text-color); border-bottom: 1px solid var(--border-color); padding-bottom: 10px;
+}
+.sort-item { cursor: pointer; }
+.sort-item.active { color: var(--text-color); font-weight: bold; }
+
+/* 댓글 아이템 */
+.comment-item {
+    margin-bottom: 1.5rem;
+    animation: fadeIn 0.3s;
+}
+.comment-header {
+    display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem;
+}
+.comment-writer { font-weight: bold; color: var(--text-color); display: flex; align-items: center; gap: 6px; }
+.comment-date { color: var(--sub-text-color); font-size: 0.8rem; }
+
+.comment-body {
+    color: var(--text-color); line-height: 1.5; font-size: 0.95rem; margin-bottom: 8px;
+}
+
+.comment-actions {
+    display: flex; gap: 15px; font-size: 0.85rem; color: var(--sub-text-color);
+}
+.action-btn { cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s; }
+.action-btn:hover { color: var(--text-color); }
+.action-btn.liked { color: #ff4757; } /* 좋아요 활성 */
+
+/* 답글(대댓글) 스타일 */
+.reply-list {
+    margin-top: 10px; margin-left: 20px; padding-left: 15px;
+    border-left: 2px solid var(--border-color);
+}
+.reply-item { margin-top: 12px; }
+.mention-tag {
+    color: #58a6ff; font-weight: bold; margin-right: 4px;
+}
+
+/* 답글 작성 폼 (숨김 상태였다가 나타남) */
+.reply-form {
+    margin-top: 10px; display: flex; gap: 10px;
+}
+.reply-form input {
+    flex: 1; padding: 8px; border-radius: 4px; border: 1px solid var(--border-color);
+    background-color: var(--btn-bg); color: var(--text-color); outline: none;
+}
+.reply-form button {
+    padding: 6px 12px; background-color: var(--accent-color); color: white;
+    border: none; border-radius: 4px; cursor: pointer;
+}
+
+/* --- 캐릭터 옵션 정보 스타일 --- */
+
+.option-view-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.option-view-item {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.option-view-thumb {
+    width: 50px;
+    height: 50px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    object-fit: cover;
+}
+
+.option-view-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.option-view-name {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+.option-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+/* 옵션 태그 스타일 */
+.opt-tag {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    color: var(--card-bg); /* 글자는 어둡게 */
+    background-color: #e0e0e0; /* 기본 회색 */
+}
+
+/* 태그별 색상 포인트 */
+.opt-tag.captain { background-color: #ffcc00; color: #333; } /* 선장: 노랑 */
+.opt-tag.friend { background-color: #00ccff; color: #333; } /* 친선: 하늘 */
+.opt-tag.level { background-color: #4caf50; color: white; } /* 레벨: 초록 */
+.opt-tag.limit { background-color: #9c27b0; color: white; } /* 한돌: 보라 */
+.opt-tag.super { background-color: #ff5722; color: white; } /* 초진화: 주황 */
+.opt-tag.support { background-color: #e91e63; color: white; } /* 서포트: 분홍 */
+.opt-tag.potential { background-color: #607d8b; color: white; } /* 잠능: 청회색 */
+
+/* --- 서포트 배지 스타일 --- */
+.support-badge {
+    font-size: 0.75rem;
+    color: #ff9800; /* 주황색 포인트 */
+    background-color: rgba(255, 152, 0, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+    font-weight: bold;
+    vertical-align: middle;
+}
+
+/* 삭제 버튼 스타일 */
+.delete-comment-btn, .delete-reply-btn {
+    color: #ff6b6b; /* 빨간색 */
+    margin-left: auto; /* 우측 정렬 효과 (필요 시) */
+}
+.delete-comment-btn:hover, .delete-reply-btn:hover {
+    color: #ff4757;
+    background-color: rgba(255, 71, 87, 0.1);
+    border-radius: 4px;
+}
+
+/* 모바일 대응 */
+@media (max-width: 600px) {
+    .option-view-item { align-items: flex-start; }
+    .option-view-thumb { width: 40px; height: 40px; margin-top: 2px; }
+}
+
+/* 모바일 최적화 */
+@media (max-width: 600px) {
+    .formation-row { max-width: 100%; justify-content: center; }
+    .view-slot { width: 60px; height: 60px; }
+    .formation-label { text-align: center; }
+    
+    /* 모바일에서는 1줄에 1개씩 */
+    .round-detail-chars { grid-template-columns: 1fr; }
+}

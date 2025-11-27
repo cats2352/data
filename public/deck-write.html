@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPTC 커뮤니티 - 덱 작성</title>
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/deck-write.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-left">
+            <a href="index.html" class="logo">OPTC 커뮤니티</a>
+        </div>
+        <div class="nav-right">
+            <a href="user-list.html" class="icon-btn" title="사용자 목록">
+                <i class="fa-solid fa-users"></i>
+            </a>
+            <a href="user-list.html" class="icon-btn" title="사용자 목록">
+                <i class="fa-solid fa-users"></i>
+            </a>
+            <button id="theme-toggle" class="icon-btn"><i class="fa-solid fa-moon"></i></button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="write-wrapper">
+            
+            <section class="deck-info-section">
+                <h2 class="section-title">덱 정보 입력</h2>
+                
+                <div class="info-group">
+                    <label>덱 제목</label>
+                    <input type="text" id="deck-title" placeholder="나만의 강력한 덱 제목을 입력하세요" required>
+                </div>
+
+                <div class="info-group">
+                    <label>덱 설명</label>
+                    <textarea id="deck-description" placeholder="이 덱의 운영법이나 특징을 자유롭게 적어주세요. (예: 초반 버티기 후 필살기 사용)" rows="4"></textarea>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-group half">
+                        <label>메인 컨텐츠</label>
+                        <input type="text" id="main-content-display" readonly disabled>
+                    </div>
+                    <div class="info-group half">
+                        <label>세부 이벤트</label>
+                        <input type="text" id="sub-content-display" readonly disabled>
+                    </div>
+                </div>
+            </section>
+
+            <section class="char-select-section">
+                <h2 class="section-title">캐릭터 배치</h2>
+                <p class="section-desc">메인 캐릭터와 서포터 캐릭터를 배치해주세요.</p>
+
+                <div class="formation-container">
+                    </div>
+            </section>
+
+            <section class="char-option-section">
+                <h2 class="section-title">캐릭터 옵션 설정</h2>
+                <p class="section-desc">선택한 캐릭터의 육성 상태나 역할을 상세하게 설정하세요.</p>
+                
+                <div id="char-option-list" class="option-list">
+                    <div class="empty-role-msg">캐릭터를 배치하면 설정창이 나타납니다.</div>
+                </div>
+            </section>
+
+            <section class="role-desc-section">
+                <h2 class="section-title">캐릭터 역할 설명</h2> <div id="role-list" class="role-list">
+                    <div class="empty-role-msg">캐릭터를 선택하면 입력창이 나타납니다.</div>
+                </div>
+            </section>
+
+            <div class="action-bar">
+                <button id="save-deck-btn" class="save-btn">덱 저장하기</button>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="char-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>캐릭터 선택</h3>
+                <button id="close-modal" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-search">
+                <input type="text" id="char-search-input" placeholder="캐릭터 이름 검색 (예: 루피, 로)...">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+            <div id="search-results" class="search-results-grid">
+                </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+    <script src="js/deck-write.js"></script> </body>
+</html>

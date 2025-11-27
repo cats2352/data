@@ -1,0 +1,220 @@
+/* --- 변수 설정 (다크모드 기본) --- */
+:root {
+    --bg-color: #050608;
+    --header-bg: #050608;
+    --card-bg: #12151a;
+    --text-color: #ffffff;
+    --sub-text-color: #8b949e;
+    --accent-color: #d32f2f;
+    --btn-bg: #21262d;
+    --btn-hover: #30363d;
+    --border-color: #30363d;
+}
+
+/* 라이트 모드 변수 */
+body.light-mode {
+    --bg-color: #f0f2f5;
+    --header-bg: #ffffff;
+    --card-bg: #ffffff;
+    --text-color: #1f2328;
+    --sub-text-color: #57606a;
+    --btn-bg: #eef1f4;
+    --btn-hover: #dce1e7;
+    --border-color: #d0d7de;
+}
+
+/* --- 기본 초기화 --- */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Pretendard', sans-serif; }
+body { background-color: var(--bg-color); color: var(--text-color); transition: 0.3s; min-height: 100vh; display: flex; flex-direction: column; }
+a { text-decoration: none; color: inherit; }
+
+/* --- 네비게이션 바 --- */
+.navbar { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background-color: var(--header-bg); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.05); }
+/* style.css 약 30번째 줄 근처 */
+.nav-left { 
+    display: flex; 
+    align-items: center; /* baseline을 center로 변경하면 더 깔끔합니다 */
+    gap: 10px; 
+}/* style.css 약 34번째 줄 근처 */
+.logo { 
+    font-size: 1.5rem; 
+    font-weight: 900; 
+    letter-spacing: -0.5px; 
+    background: linear-gradient(to right, #8899ac, #ffffff); 
+    -webkit-background-clip: text; 
+    -webkit-text-fill-color: transparent; 
+    
+    /* ★ 아래 속성을 추가해 주세요! */
+    white-space: nowrap; 
+}
+.version { font-size: 0.8rem; color: var(--sub-text-color); }
+.nav-right { display: flex; align-items: center; gap: 12px; }
+
+.icon-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-color); width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+.icon-btn:hover { background-color: var(--btn-hover); }
+
+.login-btn { font-size: 0.9rem; font-weight: 600; padding: 8px 16px; border-radius: 6px; background-color: var(--btn-bg); color: var(--text-color); transition: 0.2s; white-space: nowrap; }
+.login-btn:hover { background-color: var(--btn-hover); }
+
+/* --- 메인 컨텐츠 --- */
+.container { flex: 1; display: flex; justify-content: center; align-items: center; padding: 2rem; }
+.grid-wrapper { width: 100%; max-width: 600px; }
+
+/* --- 카드 스타일 --- */
+.card { background-color: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.2); transition: transform 0.3s ease; }
+.card:hover { transform: translateY(-5px); }
+.card-image { width: 100%; height: 180px; background-color: #2a2f3a; position: relative; }
+.placeholder-art { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: rgba(255,255,255,0.1); background: linear-gradient(45deg, #1e232e, #2a2f3a); }
+
+.card-content { padding: 1.5rem; text-align: center; }
+.card-content h2 { font-size: 1.3rem; margin-bottom: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-color); }
+.new-badge { font-size: 0.7rem; color: var(--accent-color); background-color: rgba(211, 47, 47, 0.1); padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+.card-content p { font-size: 0.95rem; color: var(--sub-text-color); line-height: 1.5; margin-bottom: 1.5rem; }
+
+.card-action { display: flex; justify-content: flex-end; }
+.go-btn { background-color: var(--btn-bg); color: var(--text-color); padding: 8px 16px; border-radius: 6px; font-size: 0.9rem; font-weight: 600; transition: 0.2s; border: 1px solid var(--border-color); }
+.go-btn:hover { background-color: var(--btn-hover); }
+
+/* --- 푸터 --- */
+.footer { text-align: center; padding: 3rem 1rem; font-size: 0.85rem; color: var(--sub-text-color); }
+.footer p { margin-bottom: 1.5rem; line-height: 1.6; }
+.footer-links { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.discord-btn, .dev-btn { padding: 8px 16px; border-radius: 6px; background-color: #5865F2; color: white; font-weight: bold; display: flex; align-items: center; gap: 8px; transition: opacity 0.2s; }
+.dev-btn { background-color: #e0e0e0; color: #333; }
+.discord-btn:hover, .dev-btn:hover { opacity: 0.9; }
+
+/* --- 로그인/회원가입 페이지 전용 스타일 --- */
+
+/* 숨김 클래스 */
+.hidden { display: none; }
+
+/* 폼 스타일 */
+.input-group { margin-bottom: 1.2rem; text-align: left; }
+.input-group label { display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--text-color); font-weight: bold; }
+.input-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background-color: var(--btn-bg);
+    color: var(--text-color);
+    outline: none;
+    transition: 0.2s;
+}
+.input-group input:focus { border-color: #8899ac; }
+
+/* 버튼 꽉 차게 */
+.full-width { width: 100%; padding: 10px; margin-top: 10px; cursor: pointer; border: none; }
+
+/* 전환 텍스트 */
+.auth-switch { margin-top: 1.5rem; font-size: 0.85rem; color: var(--sub-text-color); }
+.auth-switch span { color: #8899ac; font-weight: bold; cursor: pointer; text-decoration: underline; }
+.auth-switch span:hover { color: var(--text-color); }
+
+/* --- 로그인 후 상단 유저 프로필 스타일 --- */
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background-color: var(--btn-bg);
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+}
+
+/* 기존 .user-name 스타일을 찾아서 아래 내용으로 교체하거나 속성을 추가하세요 */
+.user-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    
+    /* ★ 추가: 글자가 길어도 절대 줄 바꿈 하지 않음 */
+    white-space: nowrap;
+}
+
+.logout-btn {
+    background: transparent;
+    border: none;
+    color: var(--sub-text-color);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.logout-btn:hover {
+    color: var(--accent-color); /* 마우스 올리면 빨간색으로 경고 느낌 */
+}
+
+/* style.css 맨 아래에 추가 */
+
+/* 체크박스 그룹 스타일 */
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    color: var(--sub-text-color);
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--accent-color); /* 체크했을 때 포인트 색상 */
+}
+
+.checkbox-group label {
+    cursor: pointer;
+    user-select: none; /* 드래그 방지 */
+}
+
+/* --- 모바일 최적화 (기존 코드 덮어쓰기) --- */
+@media (max-width: 768px) {
+    /* 1. 네비바 패딩을 줄여서 공간 확보 */
+    .navbar { padding: 0.8rem 1rem; }
+    
+    /* 2. 로고 크기 살짝 축소 */
+    .logo { font-size: 1.1rem; }
+    
+    /* 3. ★ 중요: 모바일에서는 버전 정보 숨기기 (공간 확보) */
+    .version { display: none; }
+
+    /* 4. 오른쪽 메뉴 간격 좁히기 */
+    .nav-right { gap: 8px; }
+
+    /* 5. 유저 프로필 박스 최적화 */
+    .user-profile {
+        padding: 4px 10px; /* 패딩 축소 */
+        gap: 8px; /* 간격 축소 */
+        max-width: 140px; /* 전체 너비 제한 */
+    }
+
+    /* 6. ★ 중요: 닉네임이 길면 ...으로 표시 */
+    .user-name {
+        font-size: 0.85rem;
+        display: block; /* flex 대신 block으로 변경해야 말줄임표가 먹힘 */
+        overflow: hidden; /* 넘치는 글자 숨김 */
+        text-overflow: ellipsis; /* ... 으로 표시 */
+        white-space: nowrap; /* 줄바꿈 금지 */
+        max-width: 70px; /* 글자가 들어갈 최대 너비 설정 */
+    }
+    
+    /* 닉네임 옆 아이콘은 텍스트와 분리해서 정렬 유지 */
+    .user-name i {
+        margin-right: 4px;
+        vertical-align: middle;
+    }
+
+    /* 기타 기존 스타일 유지 */
+    .login-btn { padding: 6px 12px; font-size: 0.8rem; }
+    .container { padding: 1rem; }
+    .card-image { height: 150px; }
+    .footer-links { flex-direction: column; align-items: center; }
+    .discord-btn, .dev-btn { width: 100%; max-width: 250px; justify-content: center; }
+}

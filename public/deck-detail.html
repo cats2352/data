@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPTC 커뮤니티 - 덱 상세</title>
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/deck-detail.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-left">
+            <a href="index.html" class="logo">OPTC 커뮤니티</a>
+        </div>
+        <div class="nav-right">
+            <a href="user-list.html" class="icon-btn" title="사용자 목록">
+                <i class="fa-solid fa-users"></i>
+            </a>
+            <button id="theme-toggle" class="icon-btn"><i class="fa-solid fa-moon"></i></button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="detail-wrapper">
+            
+            <div class="detail-header">
+                <a href="deck-share.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> 목록으로</a>
+                <div class="header-content">
+                    <div class="badges" id="detail-badges">
+                        </div>
+                    <h1 id="detail-title">덱 제목 로딩 중...</h1>
+                    <div class="meta-info">
+                        <span id="detail-writer"><i class="fa-solid fa-user"></i> 작성자</span>
+                        <span id="detail-date"><i class="fa-regular fa-clock"></i> 날짜</span>
+                        <span id="detail-likes" class="like-info"><i class="fa-solid fa-heart"></i> 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <section class="detail-section description-box">
+                <h3>덱 설명</h3>
+                <p id="detail-description">설명 내용이 없습니다.</p>
+            </section>
+
+            <section class="detail-section">
+                <h3>캐릭터 배치</h3>
+                <div class="formation-view">
+                    <div class="formation-label">전열</div>
+                    <div class="formation-row" id="row-main">
+                        </div>
+                    
+                    <div class="formation-label">후열</div>
+                    <div class="formation-row" id="row-sub">
+                        </div>
+                </div>
+            </section>
+
+            <section class="detail-section" id="option-section">
+                <h3>캐릭터 옵션 정보</h3>
+                <div id="option-view-list" class="option-view-list">
+                    </div>
+            </section>
+
+            <section class="detail-section">
+                <h3>캐릭터 역할 및 운영법</h3> <div id="role-view-list" class="role-view-list">
+                    </div>
+            </section>
+
+            <section class="detail-section comment-section">
+                <h3>댓글 <span id="comment-count">0</span></h3>
+
+                <div class="comment-form">
+                    <textarea id="comment-input" placeholder="댓글을 입력하세요..." rows="2"></textarea>
+                    <button id="comment-submit-btn">등록</button>
+                </div>
+
+                <div class="comment-sort">
+                    <span class="sort-item active" data-sort="oldest">등록순</span>
+                    <span class="sort-item" data-sort="newest">최신순</span>
+                    <span class="sort-item" data-sort="reply">답글순</span>
+                </div>
+
+                <div id="comment-list" class="comment-list">
+                    </div>
+            </section>
+
+        </div> </main>
+
+    <script src="js/script.js"></script>
+    <script src="js/deck-detail.js"></script>
+</body>
+</html>

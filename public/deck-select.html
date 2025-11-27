@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPTC 커뮤니티 - 컨텐츠 선택</title>
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/deck-select.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-left">
+            <a href="index.html" class="logo">OPTC 커뮤니티</a>
+        </div>
+        <div class="nav-right">
+            <a href="user-list.html" class="icon-btn" title="사용자 목록">
+                <i class="fa-solid fa-users"></i>
+            </a>
+            <button id="theme-toggle" class="icon-btn"><i class="fa-solid fa-moon"></i></button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="select-wrapper">
+            
+            <section id="step-1-content" class="step-section active">
+                <h2 class="step-title">어떤 덱을 작성하시겠습니까?</h2>
+                <p class="step-desc">공유할 덱의 컨텐츠 종류를 선택해주세요.</p>
+                
+                <div class="content-grid">
+                    <div class="select-card" data-type="pirate_festival">
+                        <div class="card-icon"><i class="fa-solid fa-skull-crossbones"></i></div>
+                        <h3>해적제</h3>
+                        <p>Pirate Festival</p>
+                    </div>
+                    <div class="select-card" data-type="kizuna">
+                        <div class="card-icon"><i class="fa-solid fa-handshake-simple"></i></div>
+                        <h3>유대결전</h3>
+                        <p>Kizuna Clash</p>
+                    </div>
+                    <div class="select-card" data-type="treasure_map">
+                        <div class="card-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+                        <h3>트레저맵</h3>
+                        <p>Treasure Map</p>
+                    </div>
+                    <div class="select-card" data-type="coop">
+                        <div class="card-icon"><i class="fa-solid fa-users"></i></div>
+                        <h3>공동전투</h3>
+                        <p>Co-op Mission</p>
+                    </div>
+                    <div class="select-card" data-type="pirate_trail">
+                        <div class="card-icon"><i class="fa-solid fa-gem"></i></div> <h3>해적왕의 궤적</h3>
+                        <p>Pirate King's Trail</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="step-2-detail" class="step-section hidden">
+                <div class="step-header">
+                    <button id="back-step-1" class="back-btn"><i class="fa-solid fa-arrow-left"></i> 뒤로</button>
+                    <h2 class="step-title">세부 이벤트 선택</h2>
+                </div>
+                <p class="step-desc">해당되는 이벤트를 선택하면 작성 페이지로 이동합니다.</p>
+
+                <div class="search-wrapper">
+                    <input type="text" id="event-search" placeholder="이벤트 이름 검색...">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+
+                <div class="detail-list" id="detail-list-container">
+                    </div>
+                
+                <div id="no-result-msg" class="empty-message hidden" style="padding: 2rem; color: var(--sub-text-color);">
+                    <p>검색 결과가 없습니다.</p>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script src="js/script.js"></script>
+    <script src="js/deck-select.js"></script> </body>
+</html>
