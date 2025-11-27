@@ -310,37 +310,65 @@ app.put('/api/decks/:id/comments/:commentId/replies/:replyId/like', async (req, 
     }
 });
 
-// 13. 사용자 목록 조회 API
+// 13. 사용자 목록 조회 API (최적화 버전)
 app.get('/api/users', async (req, res) => {
     try {
-        await connectDB(); // DB 연결 확인
-        const users = await User.find().select('-password');
-        const decks = await Deck.find();
+        await connectDB();
+        
+        // 1. 유저 정보 가져오기 (.lean()을 쓰면 속도가 더 빨라집니다)
+        const users = await User.find().select('nickname isAdmin createdAt').lean();
 
+        // 2. 덱 통계 집계 (DB 내부에서 계산)
+        // 모든 덱을 가져오지 않고, 작성자별로 그룹화해서 숫자만 계산합니다.
+        const stats = await Deck.aggregate([
+            {
+                $project: {
+                    writer: 1,
+                    likes: 1,
+                    // 댓글 수 + 답글 수 미리 계산
+                    commentCount: {
+                        $add: [
+                            { $size: "$comments" }, 
+                            { 
+                                $reduce: { 
+                                    input: "$comments",
+                                    initialValue: 0,
+                                    in: { $add: ["$$value", { $size: { $ifNull: ["$$this.replies", []] } }] }
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: "$writer",
+                    deckCount: { $sum: 1 },
+                    totalLikes: { $sum: "$likes" },
+                    totalComments: { $sum: "$commentCount" }
+                }
+            }
+        ]);
+
+        // 3. 통계 데이터를 맵(Map) 형태로 변환 (검색 속도 향상)
+        const statsMap = {};
+        stats.forEach(stat => {
+            statsMap[stat._id] = stat;
+        });
+
+        // 4. 유저 정보와 통계 합치기
         const userList = users.map(user => {
-            const userDecks = decks.filter(d => d.writer === user.nickname);
-            
-            // ★ [수정] 이 줄이 빠져 있었습니다! 다시 추가해주세요.
-            const deckCount = userDecks.length; 
-            
-            const totalLikes = userDecks.reduce((sum, d) => sum + d.likes, 0);
-            
-            let commentCount = 0;
-            decks.forEach(d => {
-                d.comments.forEach(c => {
-                    if (c.writer === user.nickname) commentCount++;
-                    c.replies.forEach(r => {
-                        if (r.writer === user.nickname) commentCount++;
-                    });
-                });
-            });
-
+            const stat = statsMap[user.nickname] || { deckCount: 0, totalLikes: 0, totalComments: 0 };
             return {
                 _id: user._id,
                 nickname: user.nickname,
                 isAdmin: user.isAdmin,
                 createdAt: user.createdAt,
-                stats: { deckCount, totalLikes, commentCount }
+                stats: {
+                    deckCount: stat.deckCount,
+                    totalLikes: stat.totalLikes,
+                    commentCount: stat.totalComments
+                }
             };
         });
 

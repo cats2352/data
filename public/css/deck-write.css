@@ -480,6 +480,11 @@
 }
 .level-input:focus { border-color: var(--accent-color); }
 
+/* 이미지 렌더링 최적화 */
+img {
+    content-visibility: auto; /* 화면 밖에 있는 요소 렌더링 생략 */
+}
+
 /* 모바일 대응 */
 @media (max-width: 600px) {
     .option-item { flex-direction: column; gap: 10px; }
