@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { id: 'coop_red_hair', name: '준비중' }
         ],
         'pirate_trail': [
-        { id: 'trail_vs_shanks', name: 'VS 샹크스 (준비중)' }, // 예시 데이터
+        { id: 'trail_vs_shanks', name: 'VS 키드' }, // 예시 데이터
         { id: 'trail_vs_kaido', name: '준비중' }
         ]
     };

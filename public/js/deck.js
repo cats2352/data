@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ],
             // ★ [추가] 해적왕의 궤적 데이터
             'pirate_trail': [
-                'VS 샹크스 (준비중)', 
+                'VS 키드', 
                 '준비중'
             ]
         };
