@@ -3,7 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-const User = require('./models/User');
+const User = require('./models/User'); 
 const Deck = require('./models/Deck');
 
 const app = express();
@@ -13,7 +13,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- ★ [핵심] Vercel용 DB 연결 함수 정의 (캐싱 처리) ---
+// -----------------------------------------------------
+// ★ [핵심 수정] Vercel용 DB 연결 함수 정의 (이게 꼭 있어야 합니다!)
+// -----------------------------------------------------
 let cachedDb = null;
 
 async function connectDB() {
@@ -24,6 +26,9 @@ async function connectDB() {
 
     // 2. 연결이 없으면 새로 연결
     try {
+        // StrictQuery 경고 방지 (선택 사항)
+        mongoose.set('strictQuery', false);
+        
         cachedDb = await mongoose.connect(process.env.MONGO_URI);
         console.log('✅ MongoDB Connected (New Connection)');
         return cachedDb;
@@ -32,13 +37,14 @@ async function connectDB() {
         throw err;
     }
 }
+// -----------------------------------------------------
 
 // --- ★ API 라우트 ---
 
 // 1. 회원가입 API
 app.post('/api/register', async (req, res) => {
     try {
-        await connectDB(); // ★ DB 연결 필수
+        await connectDB(); // ★ DB 연결 확인
         const { nickname, password } = req.body;
 
         const existingUser = await User.findOne({ nickname });
@@ -59,7 +65,7 @@ app.post('/api/register', async (req, res) => {
 // 2. 로그인 API
 app.post('/api/login', async (req, res) => {
     try {
-        await connectDB(); // ★ DB 연결 필수
+        await connectDB(); // ★ DB 연결 확인
         const { nickname, password } = req.body;
         
         const user = await User.findOne({ nickname });
@@ -80,7 +86,7 @@ app.post('/api/login', async (req, res) => {
 // 3. 덱 저장 API
 app.post('/api/decks', async (req, res) => {
     try {
-        await connectDB(); // ★ DB 연결 필수
+        await connectDB();
         const { title, description, writer, mainContent, subContent, characters, rounds } = req.body;
 
         const newDeck = new Deck({
@@ -99,7 +105,7 @@ app.post('/api/decks', async (req, res) => {
 // 4. 덱 목록 불러오기 API
 app.get('/api/decks', async (req, res) => {
     try {
-        await connectDB(); // ★ DB 연결 필수
+        await connectDB();
         const { sort, title, writer, mainContent, subContent, startDate, endDate } = req.query;
         
         let query = {};
@@ -136,7 +142,7 @@ app.get('/api/decks', async (req, res) => {
 // 5. 덱 삭제 API
 app.delete('/api/decks/:id', async (req, res) => {
     try {
-        await connectDB(); // ★ DB 연결 필수
+        await connectDB();
         const deckId = req.params.id;
         const { userNickname } = req.body; 
 
@@ -161,7 +167,7 @@ app.delete('/api/decks/:id', async (req, res) => {
 // 6. 좋아요 토글 API
 app.put('/api/decks/:id/like', async (req, res) => {
     try {
-        await connectDB(); // ★ DB 연결 필수
+        await connectDB();
         const deckId = req.params.id;
         const { userNickname } = req.body;
 
@@ -189,7 +195,7 @@ app.put('/api/decks/:id/like', async (req, res) => {
 // 7. 특정 덱 조회 API
 app.get('/api/decks/:id', async (req, res) => {
     try {
-        await connectDB(); // ★ DB 연결 필수
+        await connectDB();
         const deck = await Deck.findById(req.params.id);
         if (!deck) return res.status(404).json({ message: '덱을 찾을 수 없습니다.' });
         res.status(200).json(deck);
@@ -202,7 +208,7 @@ app.get('/api/decks/:id', async (req, res) => {
 // 8. 덱 수정 API
 app.put('/api/decks/:id', async (req, res) => {
     try {
-        await connectDB(); // ★ DB 연결 필수
+        await connectDB();
         const deckId = req.params.id;
         const { writer, title, description, characters, rounds } = req.body;
 
@@ -229,7 +235,7 @@ app.put('/api/decks/:id', async (req, res) => {
 // 9. 댓글 작성 API
 app.post('/api/decks/:id/comments', async (req, res) => {
     try {
-        await connectDB(); // ★ DB 연결 필수
+        await connectDB();
         const { writer, content } = req.body;
         const deck = await Deck.findById(req.params.id);
         if (!deck) return res.status(404).json({ message: '덱을 찾을 수 없습니다.' });
@@ -246,7 +252,7 @@ app.post('/api/decks/:id/comments', async (req, res) => {
 // 10. 답글(대댓글) 작성 API
 app.post('/api/decks/:id/comments/:commentId/replies', async (req, res) => {
     try {
-        await connectDB(); // ★ DB 연결 필수
+        await connectDB();
         const { writer, content, tag } = req.body;
         const deck = await Deck.findById(req.params.id);
         if (!deck) return res.status(404).json({ message: '덱을 찾을 수 없습니다.' });
@@ -266,7 +272,7 @@ app.post('/api/decks/:id/comments/:commentId/replies', async (req, res) => {
 // 11. 댓글 좋아요 토글 API
 app.put('/api/decks/:id/comments/:commentId/like', async (req, res) => {
     try {
-        await connectDB(); // ★ DB 연결 필수
+        await connectDB();
         const { userNickname } = req.body;
         const deck = await Deck.findById(req.params.id);
         const comment = deck.comments.id(req.params.commentId);
@@ -286,7 +292,7 @@ app.put('/api/decks/:id/comments/:commentId/like', async (req, res) => {
 // 12. 답글 좋아요 토글 API
 app.put('/api/decks/:id/comments/:commentId/replies/:replyId/like', async (req, res) => {
     try {
-        await connectDB(); // ★ DB 연결 필수
+        await connectDB();
         const { userNickname } = req.body;
         const deck = await Deck.findById(req.params.id);
         const comment = deck.comments.id(req.params.commentId);
@@ -307,12 +313,16 @@ app.put('/api/decks/:id/comments/:commentId/replies/:replyId/like', async (req, 
 // 13. 사용자 목록 조회 API
 app.get('/api/users', async (req, res) => {
     try {
-        await connectDB(); // ★ DB 연결 필수
+        await connectDB(); // DB 연결 확인
         const users = await User.find().select('-password');
         const decks = await Deck.find();
 
         const userList = users.map(user => {
             const userDecks = decks.filter(d => d.writer === user.nickname);
+            
+            // ★ [수정] 이 줄이 빠져 있었습니다! 다시 추가해주세요.
+            const deckCount = userDecks.length; 
+            
             const totalLikes = userDecks.reduce((sum, d) => sum + d.likes, 0);
             
             let commentCount = 0;
@@ -344,7 +354,7 @@ app.get('/api/users', async (req, res) => {
 // 14. [관리자] 유저 닉네임 변경 API
 app.put('/api/users/:id', async (req, res) => {
     try {
-        await connectDB(); // ★ DB 연결 필수
+        await connectDB();
         const { newNickname } = req.body;
         const targetUser = await User.findById(req.params.id);
         
@@ -366,7 +376,7 @@ app.put('/api/users/:id', async (req, res) => {
 // 15. [관리자] 유저 강제 탈퇴 API
 app.delete('/api/users/:id', async (req, res) => {
     try {
-        await connectDB(); // ★ DB 연결 필수
+        await connectDB();
         const targetUser = await User.findById(req.params.id);
         if (!targetUser) return res.status(404).json({ message: '유저를 찾을 수 없습니다.' });
 
@@ -383,7 +393,7 @@ app.delete('/api/users/:id', async (req, res) => {
 // 16. 댓글 삭제 API
 app.delete('/api/decks/:id/comments/:commentId', async (req, res) => {
     try {
-        await connectDB(); // ★ DB 연결 필수
+        await connectDB();
         const { id, commentId } = req.params;
         const { userNickname } = req.body;
 
@@ -412,7 +422,7 @@ app.delete('/api/decks/:id/comments/:commentId', async (req, res) => {
 // 17. 답글 삭제 API
 app.delete('/api/decks/:id/comments/:commentId/replies/:replyId', async (req, res) => {
     try {
-        await connectDB(); // ★ DB 연결 필수
+        await connectDB();
         const { id, commentId, replyId } = req.params;
         const { userNickname } = req.body;
 
@@ -441,7 +451,7 @@ app.delete('/api/decks/:id/comments/:commentId/replies/:replyId', async (req, re
     }
 });
 
-// 서버 시작
+// 서버 시작 (로컬 테스트용)
 if (require.main === module) {
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
@@ -449,4 +459,5 @@ if (require.main === module) {
     });
 }
 
+// Vercel용 내보내기
 module.exports = app;
