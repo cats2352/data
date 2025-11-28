@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 2. 회원가입 처리 (서버로 전송) - 기존 유지
+    // 2. 회원가입 처리 (서버로 전송)
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -60,7 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (response.ok) {
-                    alert('회원가입이 완료되었습니다! 로그인 해주세요.');
+                    // ★ [수정] 승인 대기 메시지
+                    alert(data.message); 
                     document.getElementById('reg-nickname').value = '';
                     document.getElementById('reg-password').value = '';
                     registerSection.classList.add('hidden');
@@ -98,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // 로그인 상태 유지 (메인페이지 표시용)
                     localStorage.setItem('userNickname', data.nickname);
 
-                    // ★ [추가] 관리자 여부 저장 (문자열로 저장됨: "true" or "false")
+                    // ★ 관리자 여부 저장
                     localStorage.setItem('isAdmin', data.isAdmin);
 
                     // --- ★ [기능 2] 닉네임/비밀번호 기억하기 처리 ---
@@ -114,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert(`${data.nickname} 선장님, 환영합니다!`);
                     window.location.href = 'index.html';
                 } else {
+                    // ★ [수정] 승인 대기 등 서버 메시지 표시
                     alert(data.message);
                 }
             } catch (error) {

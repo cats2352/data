@@ -15,7 +15,7 @@ const compression = require('compression');
 
 const app = express();
 
-// ★ [추가] 응답 데이터 압축 (가장 위쪽에 배치하는 것이 좋습니다)
+// 응답 데이터 압축
 app.use(compression()); 
 
 // 기본 설정
@@ -95,9 +95,12 @@ app.post('/api/register', async (req, res) => {
         const existingUser = await User.findOne({ nickname });
         if (existingUser) return res.status(400).json({ message: '이미 존재하는 닉네임입니다.' });
 
+        // ★ [수정] 모델의 default: false에 따라 승인 대기 상태로 생성됨
         const newUser = new User({ nickname, password });
         await newUser.save();
-        res.status(201).json({ message: '회원가입 성공!' });
+        
+        // ★ [수정] 안내 메시지 변경
+        res.status(201).json({ message: '가입 신청이 완료되었습니다. 관리자 승인 후 이용 가능합니다.' });
     } catch (error) { res.status(500).json({ message: '서버 오류' }); }
 });
 
@@ -108,6 +111,11 @@ app.post('/api/login', async (req, res) => {
         const user = await User.findOne({ nickname });
         if (!user) return res.status(400).json({ message: '존재하지 않는 닉네임입니다.' });
         if (user.password !== password) return res.status(400).json({ message: '비밀번호가 틀렸습니다.' });
+
+        // ★ [추가] 승인 여부 체크 (isApproved가 false면 로그인 차단)
+        if (user.isApproved === false) {
+            return res.status(403).json({ message: '관리자 승인 대기 중인 계정입니다.' });
+        }
 
         res.status(200).json({ message: '로그인 성공!', nickname: user.nickname, isAdmin: user.isAdmin });
     } catch (error) { res.status(500).json({ message: '서버 오류' }); }
@@ -304,39 +312,39 @@ app.delete('/api/decks/:id/comments/:commentId/replies/:replyId', async (req, re
     } catch (e) { res.status(500).json({ message: 'Error' }); }
 });
 
-// server.js 의 '/api/users' 라우트 부분을 아래 코드로 교체
+// --- 유저 관리 API ---
 
-// 13. 사용자 목록 조회 API (검색 + 페이지네이션 추가)
+// 13. 사용자 목록 조회 API (검색 + 페이지네이션 + 승인여부 확인)
 app.get('/api/users', async (req, res) => {
     try {
         await connectDB();
         
         // 쿼리 파라미터 받기
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20; // 기본 20명
+        const limit = parseInt(req.query.limit) || 20; 
         const search = req.query.search || '';
 
-        // 검색 쿼리 생성 (닉네임 부분 일치, 대소문자 무시)
+        // 검색 쿼리
         const query = search ? { nickname: { $regex: search, $options: 'i' } } : {};
 
-        // 1. 전체 유저 수 카운트 (페이지네이션 계산용)
+        // 1. 전체 유저 수
         const totalUsers = await User.countDocuments(query);
         const totalPages = Math.ceil(totalUsers / limit);
 
-        // 2. 현재 페이지에 해당하는 유저 목록 가져오기
+        // 2. 유저 목록 (isApproved 필드 포함)
         const users = await User.find(query)
             .sort({ createdAt: -1 }) // 가입일 최신순
             .skip((page - 1) * limit)
             .limit(limit)
-            .select('nickname isAdmin createdAt')
+            .select('nickname isAdmin isApproved createdAt') // ★ isApproved 추가
             .lean();
 
-        // 검색된 유저들의 닉네임 목록 추출
+        // 닉네임 목록 추출
         const targetNicknames = users.map(u => u.nickname);
 
-        // 3. 해당 유저들의 덱 통계만 집계 (최적화)
+        // 3. 덱 통계 집계
         const stats = await Deck.aggregate([
-            { $match: { writer: { $in: targetNicknames } } }, // ★ 검색된 유저들만 매칭
+            { $match: { writer: { $in: targetNicknames } } },
             {
                 $project: {
                     writer: 1,
@@ -378,6 +386,7 @@ app.get('/api/users', async (req, res) => {
                 _id: user._id,
                 nickname: user.nickname,
                 isAdmin: user.isAdmin,
+                isApproved: user.isApproved, // ★ 승인 상태 전달
                 createdAt: user.createdAt,
                 stats: {
                     deckCount: stat.deckCount,
@@ -387,7 +396,6 @@ app.get('/api/users', async (req, res) => {
             };
         });
 
-        // 페이지네이션 정보와 함께 응답
         res.status(200).json({
             users: userList,
             currentPage: page,
@@ -399,6 +407,15 @@ app.get('/api/users', async (req, res) => {
         console.error(error);
         res.status(500).json({ message: '유저 목록 로딩 실패' });
     }
+});
+
+// ★ [신규] 유저 승인 API
+app.put('/api/users/:id/approve', async (req, res) => {
+    try {
+        await connectDB();
+        await User.findByIdAndUpdate(req.params.id, { isApproved: true });
+        res.status(200).json({ message: '승인되었습니다.' });
+    } catch (e) { res.status(500).json({ message: '오류 발생' }); }
 });
 
 app.put('/api/users/:id', async (req, res) => {
@@ -507,7 +524,6 @@ app.delete('/api/teams/:id', async (req, res) => {
     } catch (e) { res.status(500).json({ message: 'Error' }); }
 });
 
-// ★ [핵심] 누락되었던 팀 댓글 API 추가
 app.post('/api/teams/:id/comments', async (req, res) => {
     try {
         await connectDB();
@@ -551,7 +567,7 @@ app.delete('/api/teams/:id/comments/:commentId', async (req, res) => {
 // ★ [신규] 문의 & 알림 시스템 API
 // -----------------------------------------------------
 
-// 1. 관리자 목록 조회 (문의하기 폼용)
+// 1. 관리자 목록 조회
 app.get('/api/admins', async (req, res) => {
     try {
         await connectDB();
@@ -560,13 +576,12 @@ app.get('/api/admins', async (req, res) => {
     } catch (e) { res.status(500).json({ message: 'Error' }); }
 });
 
-// 2. 문의 등록 (1시간 제한 체크)
+// 2. 문의 등록 (1시간 제한)
 app.post('/api/inquiries', async (req, res) => {
     try {
         await connectDB();
         const { writer, targetAdmin, category, content } = req.body;
 
-        // 1시간 이내 작성 글 확인
         const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
         const recentInquiry = await Inquiry.findOne({ 
             writer, 
@@ -592,7 +607,7 @@ app.get('/api/inquiries', async (req, res) => {
     } catch (e) { res.status(500).json({ message: 'Error' }); }
 });
 
-// 4. [관리자용] 답장 전송 (+알림 & 쪽지 생성)
+// 4. [관리자용] 답장 전송
 app.post('/api/inquiries/:id/reply', async (req, res) => {
     try {
         await connectDB();
@@ -602,24 +617,24 @@ app.post('/api/inquiries/:id/reply', async (req, res) => {
         const inquiry = await Inquiry.findById(inquiryId);
         if (!inquiry) return res.status(404).json({ message: '문의 없음' });
 
-        // 1. 문의글 상태 업데이트
+        // 1. 상태 업데이트
         inquiry.reply = replyContent;
         inquiry.isReplied = true;
         await inquiry.save();
 
-        // 2. 유저에게 '알림' 생성 (실시간 확인용, 3일 후 삭제됨)
+        // 2. 알림 생성
         const noti = new Notification({
             targetUser: inquiry.writer,
             content: `관리자(${adminName})님이 문의에 답장을 보냈습니다.`
         });
         await noti.save();
 
-        // 3. ★ [추가] 유저 '쪽지함'에 저장 (상세 내용 확인용, 7일 후 삭제됨)
+        // 3. 쪽지함 저장
         const msg = new Message({
             receiver: inquiry.writer,
             sender: adminName,
             content: replyContent,
-            originalInquiry: inquiry.content.substring(0, 20) + '...' // 원본 문의 요약
+            originalInquiry: inquiry.content.substring(0, 20) + '...'
         });
         await msg.save();
 
@@ -627,7 +642,7 @@ app.post('/api/inquiries/:id/reply', async (req, res) => {
     } catch (e) { res.status(500).json({ message: 'Error' }); }
 });
 
-// 5. [유저용] 내 알림 조회 (기존 유지)
+// 5. [유저용] 내 알림 조회
 app.get('/api/notifications/:nickname', async (req, res) => {
     try {
         await connectDB();
@@ -637,7 +652,7 @@ app.get('/api/notifications/:nickname', async (req, res) => {
     } catch (e) { res.status(500).json({ message: 'Error' }); }
 });
 
-// 6. [유저용] 알림 읽음 처리 (기존 유지)
+// 6. [유저용] 알림 읽음 처리
 app.put('/api/notifications/:id/read', async (req, res) => {
     try {
         await connectDB();
@@ -646,18 +661,17 @@ app.put('/api/notifications/:id/read', async (req, res) => {
     } catch (e) { res.status(500).json({ message: 'Error' }); }
 });
 
-// ★ [신규] 7. 쪽지함 목록 조회 API
+// 7. 쪽지함 목록 조회 API
 app.get('/api/messages/:nickname', async (req, res) => {
     try {
         await connectDB();
         const { nickname } = req.params;
-        // 최신순 정렬
         const messages = await Message.find({ receiver: nickname }).sort({ createdAt: -1 });
         res.status(200).json(messages);
     } catch (e) { res.status(500).json({ message: 'Error' }); }
 });
 
-// ★ [신규] 8. 문의글 삭제 API (관리자용)
+// 8. 문의글 삭제 API
 app.delete('/api/inquiries/:id', async (req, res) => {
     try {
         await connectDB();

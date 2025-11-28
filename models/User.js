@@ -12,10 +12,15 @@ const userSchema = new mongoose.Schema({
         required: true,
         minlength: 4
     },
-    // ★ 추가: 관리자 여부 (기본값은 false)
+    // 관리자 여부
     isAdmin: {
         type: Boolean,
         default: false
+    },
+    // ★ 추가: 가입 승인 여부 (기본값 false: 승인 대기)
+    isApproved: {
+        type: Boolean,
+        default: false 
     },
     createdAt: {
         type: Date,
