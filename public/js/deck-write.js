@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // 왼쪽: 캐릭터 정보
                 const charInfo = `
                     <div class="option-char-info">
-                        <img src="img/Thumbnail/${char.id}.png" class="option-thumb" onerror="this.src='https://via.placeholder.com/60'">
+                        <img src="img/Thumbnail/${char.id}.webp" class="option-thumb" onerror="this.src='https://via.placeholder.com/60'">
                         <span class="option-name">${char.name}</span>
                     </div>`;
 
@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const row = document.createElement('div');
                 row.className = 'role-item';
                 const img = document.createElement('img');
-                img.src = `img/Thumbnail/${char.id}.png`;
+                img.src = `img/Thumbnail/${char.id}.webp`;
                 img.className = 'role-thumb';
                 img.onerror = () => { img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50'%3E%3Crect width='50' height='50' fill='%23cccccc'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='8' fill='%23555555'%3ENo Img%3C/text%3E%3C/svg%3E"; };
 
@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     hasChar = true;
                     const item = document.createElement('div');
                     item.className = 'round-char-item';
-                    item.innerHTML = `<img src="img/Thumbnail/${char.id}.png"><span class="round-char-name">${char.name}</span>`;
+                    item.innerHTML = `<img src="img/Thumbnail/${char.id}.webp"><span class="round-char-name">${char.name}</span>`;
                     item.title = char.name;
                     if (round.usedSlots.includes(i)) item.classList.add('selected');
                     item.onclick = () => {
@@ -420,7 +420,7 @@ function renderSearchResults(keyword) {
 
             // 2. 이미지 (지연 로딩 적용)
             const img = document.createElement('img');
-            img.src = `img/Thumbnail/${id}.png`; 
+            img.src = `img/Thumbnail/${id}.webp`; 
             img.alt = name;
             img.loading = "lazy"; // 화면에 보일 때만 로딩
             img.onerror = function() { 
@@ -468,7 +468,7 @@ function renderSearchResults(keyword) {
         const slot = document.querySelector(`.char-slot[data-index="${index}"]`);
         if (slot) {
             slot.innerHTML = `
-                <img src="img/Thumbnail/${id}.png" alt="${name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
+                <img src="img/Thumbnail/${id}.webp" alt="${name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
                 <button class="slot-remove-btn" title="삭제"><i class="fa-solid fa-xmark"></i></button>
             `;
             slot.querySelector('.slot-remove-btn').addEventListener('click', (e) => {

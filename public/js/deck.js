@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         deck.characters.slice(0, limit).forEach(char => {
             if (char) {
-                previewImagesHtml += `<img src="img/Thumbnail/${char.id}.png" alt="${char.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">`;
+                previewImagesHtml += `<img src="img/Thumbnail/${char.id}.webp" alt="${char.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">`;
             } else {
                 previewImagesHtml += `<div class="empty-slot"></div>`;
             }

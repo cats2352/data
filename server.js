@@ -7,13 +7,18 @@ const User = require('./models/User');
 const Deck = require('./models/Deck');
 const Visitor = require('./models/Visitor'); // 방문자 모델
 const Team = require('./models/Team');       // 팀 모델
+const compression = require('compression'); 
 
 const app = express();
+
+// ★ [추가] 응답 데이터 압축 (가장 위쪽에 배치하는 것이 좋습니다)
+app.use(compression()); 
 
 // 기본 설정
 app.use(cors());
 app.use(express.json());
-// 정적 파일 캐싱 설정 (1일) - 대역폭 최적화
+
+// 정적 파일 캐싱 설정 (1일)
 app.use(express.static(path.join(__dirname, 'public'), {
     maxAge: 86400000 
 }));

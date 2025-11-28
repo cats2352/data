@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const slot = document.createElement('div');
             slot.className = 'view-slot';
             if (char) {
-                slot.innerHTML = `<img src="img/Thumbnail/${char.id}.png" alt="${char.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">`;
+                slot.innerHTML = `<img src="img/Thumbnail/${char.id}.webp" alt="${char.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">`;
                 slot.title = char.name;
             }
             container.appendChild(slot);
@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const tagsHtml = generateOptionTags(char.options);
 
                 item.innerHTML = `
-                    <img src="img/Thumbnail/${char.id}.png" class="option-view-thumb" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
+                    <img src="img/Thumbnail/${char.id}.webp" class="option-view-thumb" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
                     <div class="option-view-content">
                         <span class="option-view-name">${char.name}</span>
                         <div class="option-tags">${tagsHtml}</div>
@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                             charHtml += `
                                 <div class="round-char-card">
-                                    <img src="img/Thumbnail/${char.id}.png" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
+                                    <img src="img/Thumbnail/${char.id}.webp" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
                                     <span>${char.name}${badgeHtml}</span>
                                 </div>
                             `;
@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const item = document.createElement('div');
                     item.className = 'role-view-item';
                     item.innerHTML = `
-                        <img src="img/Thumbnail/${char.id}.png" class="role-thumb" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
+                        <img src="img/Thumbnail/${char.id}.webp" class="role-thumb" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
                         <div>
                             <span class="role-char-name">${char.name}</span>
                             <div class="role-text">${char.role || '(작성된 설명 없음)'}</div>
