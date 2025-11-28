@@ -7,7 +7,11 @@ const User = require('./models/User');
 const Deck = require('./models/Deck');
 const Visitor = require('./models/Visitor'); // 방문자 모델
 const Team = require('./models/Team');       // 팀 모델
-const compression = require('compression'); 
+const Inquiry = require('./models/Inquiry');
+const Notification = require('./models/Notification');
+const Message = require('./models/Message'); // 새로 추가
+const compression = require('compression');
+
 
 const app = express();
 
@@ -300,36 +304,101 @@ app.delete('/api/decks/:id/comments/:commentId/replies/:replyId', async (req, re
     } catch (e) { res.status(500).json({ message: 'Error' }); }
 });
 
-// --- 4. 사용자 관리 API ---
+// server.js 의 '/api/users' 라우트 부분을 아래 코드로 교체
+
+// 13. 사용자 목록 조회 API (검색 + 페이지네이션 추가)
 app.get('/api/users', async (req, res) => {
     try {
         await connectDB();
-        const users = await User.find().select('nickname isAdmin createdAt').lean();
+        
+        // 쿼리 파라미터 받기
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20; // 기본 20명
+        const search = req.query.search || '';
+
+        // 검색 쿼리 생성 (닉네임 부분 일치, 대소문자 무시)
+        const query = search ? { nickname: { $regex: search, $options: 'i' } } : {};
+
+        // 1. 전체 유저 수 카운트 (페이지네이션 계산용)
+        const totalUsers = await User.countDocuments(query);
+        const totalPages = Math.ceil(totalUsers / limit);
+
+        // 2. 현재 페이지에 해당하는 유저 목록 가져오기
+        const users = await User.find(query)
+            .sort({ createdAt: -1 }) // 가입일 최신순
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .select('nickname isAdmin createdAt')
+            .lean();
+
+        // 검색된 유저들의 닉네임 목록 추출
+        const targetNicknames = users.map(u => u.nickname);
+
+        // 3. 해당 유저들의 덱 통계만 집계 (최적화)
         const stats = await Deck.aggregate([
+            { $match: { writer: { $in: targetNicknames } } }, // ★ 검색된 유저들만 매칭
             {
                 $project: {
-                    writer: 1, likes: 1,
+                    writer: 1,
+                    likes: 1,
                     commentCount: {
-                        $add: [{ $size: "$comments" }, { $reduce: { input: "$comments", initialValue: 0, in: { $add: ["$$value", { $size: { $ifNull: ["$$this.replies", []] } }] } } }]
+                        $add: [
+                            { $size: "$comments" }, 
+                            { 
+                                $reduce: { 
+                                    input: "$comments",
+                                    initialValue: 0,
+                                    in: { $add: ["$$value", { $size: { $ifNull: ["$$this.replies", []] } }] }
+                                }
+                            }
+                        ]
                     }
                 }
             },
             {
-                $group: { _id: "$writer", deckCount: { $sum: 1 }, totalLikes: { $sum: "$likes" }, totalComments: { $sum: "$commentCount" } }
+                $group: {
+                    _id: "$writer",
+                    deckCount: { $sum: 1 },
+                    totalLikes: { $sum: "$likes" },
+                    totalComments: { $sum: "$commentCount" }
+                }
             }
         ]);
-        const statsMap = {};
-        stats.forEach(stat => { statsMap[stat._id] = stat; });
 
+        // 4. 통계 맵핑
+        const statsMap = {};
+        stats.forEach(stat => {
+            statsMap[stat._id] = stat;
+        });
+
+        // 5. 최종 데이터 조립
         const userList = users.map(user => {
             const stat = statsMap[user.nickname] || { deckCount: 0, totalLikes: 0, totalComments: 0 };
             return {
-                _id: user._id, nickname: user.nickname, isAdmin: user.isAdmin, createdAt: user.createdAt,
-                stats: { deckCount: stat.deckCount, totalLikes: stat.totalLikes, commentCount: stat.totalComments }
+                _id: user._id,
+                nickname: user.nickname,
+                isAdmin: user.isAdmin,
+                createdAt: user.createdAt,
+                stats: {
+                    deckCount: stat.deckCount,
+                    totalLikes: stat.totalLikes,
+                    commentCount: stat.totalComments
+                }
             };
         });
-        res.status(200).json(userList);
-    } catch (error) { res.status(500).json({ message: '로딩 실패' }); }
+
+        // 페이지네이션 정보와 함께 응답
+        res.status(200).json({
+            users: userList,
+            currentPage: page,
+            totalPages: totalPages,
+            totalUsers: totalUsers
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: '유저 목록 로딩 실패' });
+    }
 });
 
 app.put('/api/users/:id', async (req, res) => {
@@ -475,6 +544,125 @@ app.delete('/api/teams/:id/comments/:commentId', async (req, res) => {
         team.comments.pull(commentId);
         await team.save();
         res.status(200).json(team.comments);
+    } catch (e) { res.status(500).json({ message: 'Error' }); }
+});
+
+// -----------------------------------------------------
+// ★ [신규] 문의 & 알림 시스템 API
+// -----------------------------------------------------
+
+// 1. 관리자 목록 조회 (문의하기 폼용)
+app.get('/api/admins', async (req, res) => {
+    try {
+        await connectDB();
+        const admins = await User.find({ isAdmin: true }).select('nickname');
+        res.status(200).json(admins);
+    } catch (e) { res.status(500).json({ message: 'Error' }); }
+});
+
+// 2. 문의 등록 (1시간 제한 체크)
+app.post('/api/inquiries', async (req, res) => {
+    try {
+        await connectDB();
+        const { writer, targetAdmin, category, content } = req.body;
+
+        // 1시간 이내 작성 글 확인
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+        const recentInquiry = await Inquiry.findOne({ 
+            writer, 
+            createdAt: { $gte: oneHourAgo } 
+        });
+
+        if (recentInquiry) {
+            return res.status(429).json({ message: '문의는 1시간에 1번만 등록 가능합니다.' });
+        }
+
+        const newInquiry = new Inquiry({ writer, targetAdmin, category, content });
+        await newInquiry.save();
+        res.status(201).json({ message: '문의가 등록되었습니다.' });
+    } catch (e) { res.status(500).json({ message: 'Error' }); }
+});
+
+// 3. [관리자용] 모든 문의 조회
+app.get('/api/inquiries', async (req, res) => {
+    try {
+        await connectDB();
+        const inquiries = await Inquiry.find().sort({ createdAt: -1 });
+        res.status(200).json(inquiries);
+    } catch (e) { res.status(500).json({ message: 'Error' }); }
+});
+
+// 4. [관리자용] 답장 전송 (+알림 & 쪽지 생성)
+app.post('/api/inquiries/:id/reply', async (req, res) => {
+    try {
+        await connectDB();
+        const { replyContent, adminName } = req.body;
+        const inquiryId = req.params.id;
+
+        const inquiry = await Inquiry.findById(inquiryId);
+        if (!inquiry) return res.status(404).json({ message: '문의 없음' });
+
+        // 1. 문의글 상태 업데이트
+        inquiry.reply = replyContent;
+        inquiry.isReplied = true;
+        await inquiry.save();
+
+        // 2. 유저에게 '알림' 생성 (실시간 확인용, 3일 후 삭제됨)
+        const noti = new Notification({
+            targetUser: inquiry.writer,
+            content: `관리자(${adminName})님이 문의에 답장을 보냈습니다.`
+        });
+        await noti.save();
+
+        // 3. ★ [추가] 유저 '쪽지함'에 저장 (상세 내용 확인용, 7일 후 삭제됨)
+        const msg = new Message({
+            receiver: inquiry.writer,
+            sender: adminName,
+            content: replyContent,
+            originalInquiry: inquiry.content.substring(0, 20) + '...' // 원본 문의 요약
+        });
+        await msg.save();
+
+        res.status(200).json({ message: '답장 및 쪽지 전송 완료' });
+    } catch (e) { res.status(500).json({ message: 'Error' }); }
+});
+
+// 5. [유저용] 내 알림 조회 (기존 유지)
+app.get('/api/notifications/:nickname', async (req, res) => {
+    try {
+        await connectDB();
+        const { nickname } = req.params;
+        const notis = await Notification.find({ targetUser: nickname }).sort({ createdAt: -1 });
+        res.status(200).json(notis);
+    } catch (e) { res.status(500).json({ message: 'Error' }); }
+});
+
+// 6. [유저용] 알림 읽음 처리 (기존 유지)
+app.put('/api/notifications/:id/read', async (req, res) => {
+    try {
+        await connectDB();
+        await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
+        res.status(200).json({ message: '읽음 처리' });
+    } catch (e) { res.status(500).json({ message: 'Error' }); }
+});
+
+// ★ [신규] 7. 쪽지함 목록 조회 API
+app.get('/api/messages/:nickname', async (req, res) => {
+    try {
+        await connectDB();
+        const { nickname } = req.params;
+        // 최신순 정렬
+        const messages = await Message.find({ receiver: nickname }).sort({ createdAt: -1 });
+        res.status(200).json(messages);
+    } catch (e) { res.status(500).json({ message: 'Error' }); }
+});
+
+// ★ [신규] 8. 문의글 삭제 API (관리자용)
+app.delete('/api/inquiries/:id', async (req, res) => {
+    try {
+        await connectDB();
+        await Inquiry.findByIdAndDelete(req.params.id);
+        res.status(200).json({ message: '문의가 삭제되었습니다.' });
     } catch (e) { res.status(500).json({ message: 'Error' }); }
 });
 

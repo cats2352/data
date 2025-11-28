@@ -77,7 +77,8 @@ a { text-decoration: none; color: inherit; }
 .discord-btn:hover, .dev-btn:hover { opacity: 0.9; }
 
 /* --- 로그인/회원가입 페이지 전용 스타일 --- */
-.hidden { display: none; }
+.hidden { display: none !important; }
+
 .input-group { margin-bottom: 1.2rem; text-align: left; }
 .input-group label { display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--text-color); font-weight: bold; }
 .input-group input { width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--btn-bg); color: var(--text-color); outline: none; transition: 0.2s; }
@@ -109,6 +110,68 @@ a { text-decoration: none; color: inherit; }
 .visitor-badge strong, .visitor-badge span[id$="-count"] { color: var(--accent-color); font-weight: bold; margin-left: 2px; }
 .v-divider { color: var(--border-color); margin: 0 4px; }
 .v-label { font-weight: 600; }
+
+/* --- 모달 공통 스타일 (문의하기 & 설정) --- */
+.modal {
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background-color: rgba(0,0,0,0.7); 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 9999;
+}
+
+.modal-content {
+    background-color: var(--card-bg); 
+    width: 90%; max-width: 400px; 
+    border-radius: 12px; padding: 20px; 
+    border: 1px solid var(--border-color); 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    position: relative;
+    z-index: 10000;
+}
+.modal-header h3 { margin-bottom: 20px; color: var(--text-color); text-align: center; }
+.modal-body { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
+.modal-option { display: flex; justify-content: space-between; align-items: center; padding: 10px; background-color: var(--btn-bg); border-radius: 8px; }
+.modal-option label { color: var(--text-color); cursor: pointer; user-select: none; font-weight: 500; }
+.modal-option input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent-color); cursor: pointer; }
+.modal-footer { display: flex; gap: 10px; }
+.modal-btn { flex: 1; padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; }
+.btn-cancel { background-color: var(--btn-bg); color: var(--sub-text-color); border: 1px solid var(--border-color); }
+.btn-save { background-color: var(--accent-color); color: white; }
+
+/* --- 문의하기 & 알림 스타일 --- */
+.noti-btn { position: relative; }
+.noti-badge {
+    position: absolute; top: -2px; right: -2px;
+    background-color: #f44336; color: white;
+    font-size: 0.6rem; padding: 2px 5px; border-radius: 50%;
+    display: none; 
+}
+.noti-badge.show { display: block; }
+
+.noti-dropdown {
+    position: absolute; top: 50px; right: 0; width: 280px;
+    background-color: var(--card-bg); border: 1px solid var(--border-color);
+    border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    z-index: 2001; display: none; flex-direction: column; max-height: 300px; overflow-y: auto;
+}
+.noti-dropdown.active { display: flex; }
+.noti-item { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; color: var(--text-color); cursor: pointer; }
+.noti-item:hover { background-color: var(--btn-hover); }
+.noti-item.read { opacity: 0.5; }
+.noti-empty { padding: 20px; text-align: center; color: var(--sub-text-color); }
+
+.inquiry-form-group { margin-bottom: 15px; }
+.inquiry-form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--sub-text-color); }
+.inquiry-form-group select, .inquiry-form-group textarea {
+    width: 100%; padding: 10px; background-color: var(--btn-bg);
+    border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color); outline: none; font-family: inherit;
+}
+.inquiry-form-group textarea { resize: none; height: 150px; }
+.modal-note { font-size: 0.8rem; color: #888; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px; line-height: 1.5; margin-bottom: 10px; }
 
 /* --- 네비게이션 & 햄버거 메뉴 반응형 스타일 --- */
 
@@ -153,6 +216,11 @@ a { text-decoration: none; color: inherit; }
     .logo { font-size: 1.1rem; }
     .version { display: none; }
     .nav-right { gap: 8px; }
+    
+    /* ★ [추가] 모바일에서 상단바의 '사용자 목록' 아이콘 숨기기 */
+    .nav-right > a[href="user-list.html"] {
+        display: none;
+    }
     
     .hamburger-container { position: relative; }
     .hamburger { display: flex; }

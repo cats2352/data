@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OPTC 커뮤니티 - 사용자 목록</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/user-list.css"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/user-list.css"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
@@ -13,19 +14,12 @@
         <div class="nav-left">
             <a href="index.html" class="logo">OPTC 커뮤니티</a>
         </div>
-        
         <div class="nav-right">
-            <a href="user-list.html" class="icon-btn" title="사용자 목록">
-                <i class="fa-solid fa-users"></i>
-            </a>
-            <button id="theme-toggle" class="icon-btn">
-                <i class="fa-solid fa-moon"></i>
-            </button>
+            <a href="user-list.html" class="icon-btn" title="사용자 목록"><i class="fa-solid fa-users"></i></a>
+            <button id="theme-toggle" class="icon-btn"><i class="fa-solid fa-moon"></i></button>
             
             <div class="hamburger-container">
-                <button class="icon-btn hamburger">
-                    <i class="fa-solid fa-bars"></i>
-                </button>
+                <button class="icon-btn hamburger"><i class="fa-solid fa-bars"></i></button>
                 <div id="mobile-menu" class="mobile-menu">
                     <a href="index.html" class="menu-item"><i class="fa-solid fa-layer-group"></i> 덱 공유</a>
                     <a href="team-list.html" class="menu-item"><i class="fa-solid fa-flag"></i> 팀트갤 모집</a>
@@ -45,6 +39,11 @@
             <h2><i class="fa-solid fa-users"></i> 사용자 목록</h2>
             <p class="page-desc">함께 활동하는 선장님들을 확인하세요!</p>
 
+            <div class="search-container">
+                <input type="text" id="user-search-input" placeholder="닉네임 검색...">
+                <button id="user-search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+
             <div class="table-container">
                 <table class="user-table">
                     <thead>
@@ -54,12 +53,16 @@
                             <th>받은 좋아요</th>
                             <th>댓글 수</th>
                             <th>가입일</th>
-                            <th class="admin-col hidden">관리</th> </tr>
+                            <th class="admin-col hidden">관리</th> 
+                        </tr>
                     </thead>
                     <tbody id="user-table-body">
-                        </tbody>
+                        <tr><td colspan="6" style="text-align:center;">로딩 중...</td></tr>
+                    </tbody>
                 </table>
             </div>
+
+            <div id="pagination" class="pagination"></div>
         </div>
     </main>
 

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 쪽지함 - OPTC</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .inbox-list { display: flex; flex-direction: column; gap: 15px; }
+        .msg-card {
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.2s;
+        }
+        .msg-card:hover { border-color: var(--accent-color); }
+        .msg-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; color: var(--sub-text-color); }
+        .msg-preview { color: var(--text-color); font-weight: bold; }
+        .msg-body { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-color); color: var(--text-color); line-height: 1.5; display: none; }
+        .msg-card.open .msg-body { display: block; }
+        .empty-msg { text-align: center; padding: 3rem; color: var(--sub-text-color); }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="nav-left"><a href="index.html" class="logo">OPTC 커뮤니티</a></div>
+        <div class="nav-right">
+            <a href="user-list.html" class="icon-btn"><i class="fa-solid fa-users"></i></a>
+            <button id="theme-toggle" class="icon-btn"><i class="fa-solid fa-moon"></i></button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="deck-wrapper">
+            <h2 style="margin-bottom: 20px; color: var(--text-color);"><i class="fa-solid fa-envelope"></i> 내 쪽지함</h2>
+            <p style="margin-bottom: 20px; color: var(--sub-text-color); font-size: 0.9rem;">
+                * 답변 받은 쪽지는 수신일로부터 7일 후 자동으로 사라집니다.
+            </p>
+            <div id="inbox-container" class="inbox-list">
+                <div class="empty-msg">로딩 중...</div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/script.js"></script>
+    <script src="js/inbox.js"></script>
+</body>
+</html>

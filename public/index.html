@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OPTC 커뮤니티 - 덱 공유</title>
+    <title>OPTC 커뮤니티</title>
     
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/deck-share.css"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/deck-share.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
     <header class="navbar">
         <div class="nav-left">
             <a href="index.html" class="logo">OPTC 커뮤니티</a>
-            <span class="version">v1.1.0</span>
+            <span class="version">v1.2.0</span>
         </div>
         
         <div class="nav-right">
@@ -23,6 +24,16 @@
             <button id="theme-toggle" class="icon-btn">
                 <i class="fa-solid fa-moon"></i>
             </button>
+            
+            <div style="position: relative;">
+                <button id="noti-btn" class="icon-btn">
+                    <i class="fa-regular fa-bell"></i>
+                    <span id="noti-badge" class="noti-badge">0</span>
+                </button>
+                <div id="noti-dropdown" class="noti-dropdown">
+                    <div class="noti-empty">알림이 없습니다.</div>
+                </div>
+            </div>
             
             <div class="hamburger-container">
                 <button class="icon-btn hamburger">
@@ -126,9 +137,47 @@
         <p>All copyrights belong to TEAM OPTC.<br>This is an unofficial fansite.</p>
         <div class="footer-links">
             <a href="#" id="discord-link" class="discord-btn"><i class="fa-brands fa-discord"></i> 공식 디스코드</a>
-            <a href="mailto:yyuu43@naver.com" class="dev-btn"><i class="fa-solid fa-envelope"></i> 개발자 문의</a>
+            <a href="#" id="btn-open-inquiry" class="dev-btn">
+                <i class="fa-solid fa-envelope"></i> 개발자 문의하기
+            </a>
         </div>
     </footer>
+
+    <div id="inquiry-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fa-regular fa-paper-plane"></i> 문의하기</h3>
+            </div>
+            <div class="modal-body">
+                <div class="inquiry-form-group">
+                    <label>받는 관리자 (선택)</label>
+                    <select id="inq-admin-list">
+                        <option value="">관리자를 불러오는 중...</option>
+                    </select>
+                </div>
+                <div class="inquiry-form-group">
+                    <label>문의 유형</label>
+                    <select id="inq-category">
+                        <option value="기능문의">기능 문의</option>
+                        <option value="버그신고">버그 신고</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+                <div class="inquiry-form-group">
+                    <label>문의 내용</label>
+                    <textarea id="inq-content" placeholder="문의하실 내용을 자세히 작성해주세요."></textarea>
+                </div>
+                <div class="modal-note">
+                    • 1시간에 1번만 등록 가능합니다.<br>
+                    • 답장은 알림으로 전송됩니다.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-close-inquiry" class="modal-btn btn-cancel">취소</button>
+                <button id="btn-submit-inquiry" class="modal-btn btn-save">문의 등록</button>
+            </div>
+        </div>
+    </div>
 
     <script src="js/script.js"></script>
     <script src="js/deck.js"></script>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>관리자 문의함 - OPTC</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/user-list.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style> .reply-status.done { color: #4caf50; } .reply-status.wait { color: #ff9800; } </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="nav-left"><a href="index.html" class="logo">OPTC 관리자</a></div>
+    </header>
+    <main class="container">
+        <div class="user-list-wrapper">
+            <h2><i class="fa-solid fa-inbox"></i> 도착한 문의 목록</h2>
+            <div class="table-container">
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>작성자</th>
+                            <th>받는이</th>
+                            <th>유형</th>
+                            <th>상태</th>
+                            <th>내용/답장</th>
+                            <th>관리</th> </tr>
+                    </thead>
+                    <tbody id="inquiry-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <div id="reply-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header"><h3>문의 답장</h3></div>
+            <div class="modal-body">
+                <div style="background:#222; padding:10px; margin-bottom:10px; color:#ddd;" id="view-content"></div>
+                <div class="inquiry-form-group">
+                    <textarea id="reply-text" placeholder="답장을 입력하세요."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="document.getElementById('reply-modal').classList.add('hidden')" class="modal-btn btn-cancel">닫기</button>
+                <button id="btn-send-reply" class="modal-btn btn-save">전송</button>
+            </div>
+        </div>
+    </div>
+    <script src="js/admin-inquiries.js"></script>
+</body>
+</html>
