@@ -375,9 +375,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateAllUI();
     }
 
-    // --- 10. 공통 기능 ---
-    closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
-    searchInput.addEventListener('input', (e) => renderSearchResults(e.target.value.trim()));
+        // --- 10. 공통 기능 ---
+        closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+
+        // ★ [수정] 디바운싱 적용: 0.3초 딜레이 후 검색 실행
+        let debounceTimer;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                renderSearchResults(e.target.value.trim());
+            }, 300); // 300ms 동안 입력이 없으면 실행
+        });
 
     function isFuzzyMatch(text, keyword) { 
         if (!keyword) return true;
@@ -385,27 +393,68 @@ document.addEventListener('DOMContentLoaded', async () => {
         return new RegExp(pattern, 'i').test(text);
     }
 
-    function renderSearchResults(keyword) { 
-        searchResults.innerHTML = '';
-        let count = 0; let hasResult = false;
-        for (const [id, name] of Object.entries(characterData)) {
-            if (isFuzzyMatch(name, keyword)) {
-                hasResult = true;
-                const div = document.createElement('div');
-                div.className = 'result-item';
-                div.title = name;
-                const img = document.createElement('img');
-                img.src = `img/Thumbnail/${id}.png`; img.alt = name;
-                img.onerror = function() { this.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='112' height='112' viewBox='0 0 112 112'%3E%3Crect width='112' height='112' fill='%23cccccc'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23555555'%3E이미지 없음%3C/text%3E%3C/svg%3E"; };
-                div.appendChild(img);
-                div.addEventListener('click', () => { selectCharacter(id, name, currentSlotIndex); modal.classList.add('hidden'); });
-                searchResults.appendChild(div);
-                count++; if (count > 100) break;
-            }
-        }
-        if (!hasResult) searchResults.innerHTML = '<div style="padding:20px; color:#aaa; grid-column: 1/-1; text-align:center;">검색 결과가 없습니다.</div>';
+// public/js/deck-write.js
+
+function renderSearchResults(keyword) { 
+    searchResults.innerHTML = ''; // 기존 결과 초기화
+
+    // ★ [핵심 수정] 검색어가 없거나 공백뿐이면 아무것도 표시하지 않고 종료
+    if (!keyword || keyword.trim() === '') {
+        return;
     }
 
+    let count = 0; 
+    let hasResult = false;
+
+    // 대량의 DOM 조작 성능 향상을 위한 프래그먼트 사용
+    const fragment = document.createDocumentFragment(); 
+
+    for (const [id, name] of Object.entries(characterData)) {
+        if (isFuzzyMatch(name, keyword)) {
+            hasResult = true;
+            
+            // 1. 아이템 컨테이너
+            const div = document.createElement('div');
+            div.className = 'result-item';
+            div.title = name;
+
+            // 2. 이미지 (지연 로딩 적용)
+            const img = document.createElement('img');
+            img.src = `img/Thumbnail/${id}.png`; 
+            img.alt = name;
+            img.loading = "lazy"; // 화면에 보일 때만 로딩
+            img.onerror = function() { 
+                this.src = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiB2aWV3Qm94PSIwIDAgMTEyIDExMiI+PHJlY3Qgd2lkdGg9IjExMiIgaGVpZ2h0PSIxMTIiIGZpbGw9IiNjY2NjY2MiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM1NTU1NTUiPk5vIEltZzwvdGV4dD48L3N2Zz4="; 
+            };
+
+            // 3. 캐릭터 이름 텍스트
+            const textSpan = document.createElement('span');
+            textSpan.className = 'result-name';
+            textSpan.textContent = name;
+
+            // 4. 클릭 이벤트
+            div.addEventListener('click', () => { 
+                selectCharacter(id, name, currentSlotIndex); 
+                modal.classList.add('hidden'); 
+            });
+
+            // 5. 요소 조립
+            div.appendChild(img);
+            div.appendChild(textSpan);
+            fragment.appendChild(div);
+
+            count++; 
+            if (count > 100) break; // 검색 결과 최대 100개 제한
+        }
+    }
+
+    // 결과가 없을 경우 메시지 표시
+    if (!hasResult) {
+        searchResults.innerHTML = '<div style="padding:20px; color:#aaa; text-align:center;">검색 결과가 없습니다.</div>';
+    } else {
+        searchResults.appendChild(fragment);
+    }
+}
     function selectCharacter(id, name, index, savedRole = '', shouldUpdateUI = true) {
         // 기존 옵션 유지하거나 초기화
         const existingOptions = deckState[index]?.options || null;

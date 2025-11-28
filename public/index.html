@@ -25,14 +25,21 @@
             <button class="icon-btn hamburger">
                 <i class="fa-solid fa-bars"></i>
             </button>
-            <div class="nav-right">
-    <a href="login.html" class="login-btn">로그인/회원가입</a>
-</div>
+            <div class="nav-auth-area">
+                <a href="login.html" class="login-btn">로그인/회원가입</a>
+            </div>
         </div>
     </header>
 
     <main class="container">
         <div class="grid-wrapper">
+            
+            <div class="visitor-badge">
+                <span class="v-label">Total</span> <span id="total-count">0</span>
+                <span class="v-divider">|</span>
+                <span class="v-label">Today</span> <span id="today-count">0</span>
+            </div>
+
             <article class="card deck-share-card">
                 <div class="card-image">
                     <div class="placeholder-art">
@@ -47,13 +54,29 @@
                     </div>
                 </div>
             </article>
+
+            <article class="card team-card" style="margin-top: 20px;">
+                <div class="card-image">
+                    <div class="placeholder-art" style="background: linear-gradient(45deg, #2c3e50, #4ca1af);">
+                        <i class="fa-solid fa-flag"></i>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <h2>팀트갤 모집 <span class="new-badge">HOT</span></h2>
+                    <p>동료를 모아 함께 바다로!<br>대대원 모집 및 관리를 여기서 하세요.</p>
+                    <div class="card-action">
+                        <a href="team-list.html" class="go-btn">바로가기</a>
+                    </div>
+                </div>
+            </article>
+
         </div>
     </main>
 
     <footer class="footer">
         <p>All copyrights belong to TEAM OPTC.<br>This is an unofficial fansite.</p>
         <div class="footer-links">
-            <a href="#" class="discord-btn"><i class="fa-brands fa-discord"></i> 공식 디스코드</a>
+            <a href="#" id="discord-link" class="discord-btn"><i class="fa-brands fa-discord"></i> 공식 디스코드</a>
             <a href="mailto:yyuu43@naver.com" class="dev-btn">
                 <i class="fa-solid fa-envelope"></i> 개발자 문의하기
             </a>

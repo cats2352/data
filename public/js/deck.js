@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // deck-select.js 와 동일한 데이터
         const subCategories = {
             'pirate_festival': [
-                '11월~12월 해적페스티벌', 
+                '해적페스티벌', 
             ],
             'kizuna': [
                 '준비중', 

@@ -222,7 +222,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const countSpan = document.getElementById('comment-count');
         const currentUser = localStorage.getItem('userNickname');
         
-        // ★ [추가] 관리자 권한 확인
         const isAdmin = localStorage.getItem('isAdmin') === 'true';
 
         let totalCount = commentsData.length;
@@ -244,7 +243,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const isLiked = comment.likes.includes(currentUser);
             const date = new Date(comment.createdAt).toLocaleString();
 
-            // ★ [추가] 댓글 삭제 버튼 조건 (작성자 본인 또는 관리자)
             const showDelBtn = currentUser && (comment.writer === currentUser || isAdmin);
             const delBtnHtml = showDelBtn 
                 ? `<span class="action-btn delete-comment-btn" data-id="${comment._id}"><i class="fa-solid fa-trash"></i> 삭제</span>` 
@@ -252,6 +250,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const item = document.createElement('div');
             item.className = 'comment-item';
+            
+            // ★ [핵심 수정] reply-form에 style="display: none;" 추가하여 확실하게 숨김
             item.innerHTML = `
                 <div class="comment-header">
                     <span class="comment-writer"><i class="fa-solid fa-user-circle"></i> ${comment.writer}</span>
@@ -265,12 +265,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <span class="action-btn reply-open-btn" data-id="${comment._id}" data-writer="${comment.writer}">
                         <i class="fa-regular fa-comment-dots"></i> 답글달기
                     </span>
-                    ${delBtnHtml} </div>
+                    ${delBtnHtml} 
+                </div>
                 
                 <div class="reply-list">
                     ${comment.replies.map(reply => {
                         const rLiked = reply.likes.includes(currentUser);
-                        // ★ [추가] 답글 삭제 버튼 조건
                         const showReplyDel = currentUser && (reply.writer === currentUser || isAdmin);
                         const rDelHtml = showReplyDel 
                             ? `<span class="action-btn delete-reply-btn" data-cid="${comment._id}" data-rid="${reply._id}"><i class="fa-solid fa-trash"></i></span>`
@@ -288,15 +288,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                             </div>
                             <div class="comment-actions">
                                 <span class="action-btn like-reply-btn ${rLiked ? 'liked' : ''}" 
-                                      data-cid="${comment._id}" data-rid="${reply._id}">
+                                    data-cid="${comment._id}" data-rid="${reply._id}">
                                     <i class="${rLiked ? 'fa-solid' : 'fa-regular'} fa-heart"></i> ${reply.likes.length}
                                 </span>
-                                ${rDelHtml} </div>
+                                ${rDelHtml} 
+                            </div>
                         </div>`;
                     }).join('')}
                 </div>
 
-                <div class="reply-form hidden" id="reply-form-${comment._id}">
+                <div class="reply-form hidden" id="reply-form-${comment._id}" style="display: none;">
                     <input type="text" class="reply-input" placeholder="답글을 입력하세요...">
                     <button class="reply-submit-btn" data-id="${comment._id}">등록</button>
                 </div>
@@ -310,8 +311,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     function attachCommentEvents() {
         const currentUser = localStorage.getItem('userNickname');
 
-        document.querySelectorAll('.reply-open-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+                document.querySelectorAll('.reply-open-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
                 if (!currentUser) return alert('로그인이 필요합니다.');
                 const cid = btn.dataset.id;
                 const writer = btn.dataset.writer;
@@ -322,8 +323,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 input.dataset.tag = writer; 
                 input.placeholder = `@${writer} 님에게 답글 남기기...`;
                 
-                form.classList.toggle('hidden');
-                if(!form.classList.contains('hidden')) input.focus();
+                // ★ [핵심 수정] display 스타일 토글 로직 추가
+                if (form.style.display === 'none' || form.style.display === '') {
+                    form.style.display = 'flex'; // 보이게 함
+                    form.classList.remove('hidden');
+                    input.focus();
+                } else {
+                    form.style.display = 'none'; // 숨김
+                    form.classList.add('hidden');
+                }
             });
         });
 

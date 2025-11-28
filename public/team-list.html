@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>팀트갤 모집 - OPTC 커뮤니티</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/team.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="nav-left">
+            <a href="index.html" class="logo">OPTC 커뮤니티</a>
+        </div>
+        <div class="nav-right">
+            <a href="user-list.html" class="icon-btn"><i class="fa-solid fa-users"></i></a>
+            <button id="theme-toggle" class="icon-btn"><i class="fa-solid fa-moon"></i></button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="team-wrapper">
+            <div class="team-list-header">
+                <h2><i class="fa-solid fa-flag"></i> 팀트갤 모집 현황</h2>
+                <a href="team-write.html" id="create-team-btn" class="create-team-btn hidden">
+                    <i class="fa-solid fa-pen"></i> 모집글 작성
+                </a>
+            </div>
+
+            <div id="team-list-container" class="team-grid">
+                <div class="empty-message">로딩 중...</div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/script.js"></script>
+    <script src="js/team-list.js"></script>
+</body>
+</html>

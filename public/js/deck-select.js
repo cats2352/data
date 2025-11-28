@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. 하위 컨텐츠 데이터 정의
     const subCategories = {
         'pirate_festival': [
-            { id: 'pf_nov_2025', name: '11월~12월 해적페스티벌' },
+            { id: 'pf_nov_2025', name: '해적페스티벌' },
         ],
         'kizuna': [
             { id: 'kizuna_boss_blackbeard', name: '준비중' },

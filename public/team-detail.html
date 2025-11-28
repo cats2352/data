@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대대 상세 정보 - OPTC 커뮤니티</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/team.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="nav-left"><a href="index.html" class="logo">OPTC 커뮤니티</a></div>
+        <div class="nav-right">
+            <a href="user-list.html" class="icon-btn"><i class="fa-solid fa-users"></i></a>
+            <button id="theme-toggle" class="icon-btn"><i class="fa-solid fa-moon"></i></button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="team-wrapper">
+            <a href="team-list.html" style="color:var(--sub-text-color); margin-bottom:1rem; display:block;">
+                <i class="fa-solid fa-arrow-left"></i> 목록으로
+            </a>
+
+            <section class="detail-section">
+                <div class="card-header">
+                    <span id="detail-status" class="status-badge">상태</span>
+                    
+                    <div id="admin-actions" class="hidden">
+                        <button id="btn-open-settings" class="btn-detail" style="color:#4caf50; border-color:#4caf50;">
+                            <i class="fa-solid fa-gear"></i> 설정 변경
+                        </button>
+                        <button id="btn-delete-team" class="btn-detail" style="color:#ff6b6b; border-color:#ff6b6b;">삭제</button>
+                    </div>
+                </div>
+
+                <h1 id="detail-name" style="margin-bottom:10px; color:var(--text-color);">대대명 로딩중</h1>
+                <p id="detail-desc" style="color:var(--text-color); white-space:pre-wrap; line-height:1.6;">설명 로딩중...</p>
+                
+                <div style="margin-top:15px; font-size:0.9rem; color:var(--sub-text-color);">
+                    <span id="label-log-public" style="margin-right:15px;">
+                        <i class="fa-solid fa-file-lines"></i> 로그 공개
+                    </span>
+                    <span id="label-comment-allowed">
+                        <i class="fa-solid fa-comments"></i> 댓글 허용
+                    </span>
+                </div>
+
+                <div class="team-meta" style="margin-top:20px;">
+                    <span id="detail-writer"><i class="fa-solid fa-user-pen"></i> 작성자</span>
+                    <span id="detail-date"><i class="fa-regular fa-clock"></i> 날짜</span>
+                </div>
+            </section>
+
+            <section class="detail-section">
+                <h3><i class="fa-solid fa-users"></i> 대대원 명단 (총 10명)</h3>
+                <div class="member-list" id="member-list-container">
+                    </div>
+            </section>
+
+            <section class="detail-section" id="log-section">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3><i class="fa-solid fa-clock-rotate-left"></i> 변경 로그</h3>
+                    <div class="log-filters">
+                        <select id="log-filter-type">
+                            <option value="ALL">전체 보기</option>
+                            <option value="IN">가입 (IN)</option>
+                            <option value="OUT">탈퇴 (OUT)</option>
+                            <option value="CHANGE">닉네임 변경</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="log-container" id="log-box">
+                    </div>
+            </section>
+            
+        <section class="detail-section" id="comment-section">
+                        <h3><i class="fa-solid fa-comments"></i> 응원 및 댓글 <span id="comment-count">0</span></h3>
+
+                        <div id="comment-input-area" class="hidden">
+                            <div class="comment-form">
+                                <textarea id="comment-input" placeholder="응원의 한마디를 남겨주세요!" rows="1"></textarea>
+                                <button id="btn-submit-comment">등록</button>
+                            </div>
+                        </div>
+
+                        <div id="comment-disabled-msg" class="hidden" style="text-align:center; padding:20px; color:#888;">
+                            <i class="fa-solid fa-ban"></i> 댓글 작성이 허용되지 않은 게시글입니다.
+                        </div>
+
+                        <div id="comment-list" class="comment-list"></div>
+                    </section>
+
+        </div>
+    </main>
+
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>대대 설정 변경</h3>
+            </div>
+            <div class="modal-body">
+                <div class="modal-option">
+                    <label for="edit-recruit">모집중 상태</label>
+                    <input type="checkbox" id="edit-recruit">
+                </div>
+                <div class="modal-option">
+                    <label for="edit-log-public">로그 일반 공개</label>
+                    <input type="checkbox" id="edit-log-public">
+                </div>
+                <div class="modal-option">
+                    <label for="edit-comment">댓글 작성 허용</label>
+                    <input type="checkbox" id="edit-comment">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-close-settings" class="modal-btn btn-cancel">취소</button>
+                <button id="btn-save-settings" class="modal-btn btn-save">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+    <script src="js/team-detail.js"></script>
+</body>
+</html>

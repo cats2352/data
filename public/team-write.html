@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>모집글 작성 - OPTC 커뮤니티</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/team.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="nav-left"><a href="index.html" class="logo">OPTC 커뮤니티</a></div>
+        <div class="nav-right"><button id="theme-toggle" class="icon-btn"><i class="fa-solid fa-moon"></i></button></div>
+    </header>
+
+    <main class="container">
+        <div class="write-wrapper">
+            <h2 style="margin-bottom:2rem; text-align:center;">대대 모집글 작성</h2>
+            
+            <div class="info-group">
+                <label>대대명 (최대 25자)</label>
+                <input type="text" id="t-name" maxlength="25" placeholder="멋진 대대 이름을 입력하세요">
+            </div>
+            
+            <div class="info-group">
+                <label>대대장 닉네임</label>
+                <input type="text" id="t-captain" maxlength="50" placeholder="대대장님의 인게임 닉네임">
+            </div>
+            
+            <div class="info-group">
+                <label>대대 설명 (최대 1000자)</label>
+                <textarea id="t-desc" rows="6" maxlength="1000" placeholder="가입 조건이나 대대 소개를 자유롭게 적어주세요."></textarea>
+            </div>
+            
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="t-log-public" checked> 로그 일반공개</label>
+                <label><input type="checkbox" id="t-comment" checked> 댓글 허용</label>
+                <label><input type="checkbox" id="t-recruit" checked> 모집중 상태로 시작</label>
+            </div>
+            
+            <button id="btn-save-team" class="save-btn">작성 완료</button>
+        </div>
+    </main>
+
+    <script src="js/script.js"></script>
+    <script src="js/team-write.js"></script>
+</body>
+</html>
