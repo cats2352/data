@@ -15,16 +15,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             const response = await fetch(`/api/users?page=${page}&limit=20&search=${encodeURIComponent(search)}`);
             const data = await response.json();
             
-            // ★ 핵심 수정: 서버 응답 구조가 바뀌었으므로 data.users로 접근해야 함
-            const users = data.users;
+            // ★ 핵심: 서버 응답 구조가 변경되었으므로 data.users로 배열을 가져와야 함
+            const users = data.users; 
             const totalPages = data.totalPages;
 
-            // 관리자 여부 확인 (localStorage 사용)
+            // 관리자 확인
             const isAdmin = localStorage.getItem('isAdmin') === 'true';
 
             if (isAdmin) {
                 const adminCol = document.querySelector('.admin-col');
-                if (adminCol) adminCol.classList.remove('hidden');
+                if(adminCol) adminCol.classList.remove('hidden');
             }
 
             // 테이블 비우기
