@@ -27,11 +27,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 2. 햄버거 메뉴 기능 ---
+// --- 2. 햄버거 메뉴 기능 (수정됨) ---
     const hamburgerBtn = document.querySelector('.hamburger');
-    if (hamburgerBtn) {
-        hamburgerBtn.addEventListener('click', () => {
-            alert('메뉴 기능은 추후 추가될 예정입니다!');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    if (hamburgerBtn && mobileMenu) {
+        hamburgerBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // 클릭 이벤트가 문서로 전파되는 것 방지
+            mobileMenu.classList.toggle('active');
+        });
+
+        // 화면의 다른 곳을 클릭하면 메뉴 닫기
+        document.addEventListener('click', (e) => {
+            if (!hamburgerBtn.contains(e.target) && !mobileMenu.contains(e.target)) {
+                mobileMenu.classList.remove('active');
+            }
         });
     }
 
