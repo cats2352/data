@@ -680,6 +680,74 @@ app.delete('/api/inquiries/:id', async (req, res) => {
     } catch (e) { res.status(500).json({ message: 'Error' }); }
 });
 
+// --- 9. [신규] 마이 페이지 데이터 통합 조회 API ---
+app.get('/api/users/:nickname/activity', async (req, res) => {
+    try {
+        await connectDB();
+        const { nickname } = req.params;
+
+        // 1. 유저 기본 정보
+        const user = await User.findOne({ nickname }).select('nickname createdAt');
+        if (!user) return res.status(404).json({ message: '유저 없음' });
+
+        // 2. 내가 쓴 덱
+        const myDecks = await Deck.find({ writer: nickname }).sort({ createdAt: -1 });
+
+        // 3. 내가 쓴 댓글 (덱 안에 embedded 되어 있으므로 검색 필요)
+        // 댓글(comments)과 대댓글(replies) 모두 찾아서 가공
+        const decksWithComments = await Deck.find({
+            $or: [
+                { "comments.writer": nickname },
+                { "comments.replies.writer": nickname }
+            ]
+        }).select('title _id comments');
+
+        const myComments = [];
+        decksWithComments.forEach(deck => {
+            // 일반 댓글 찾기
+            deck.comments.forEach(c => {
+                if (c.writer === nickname) {
+                    myComments.push({
+                        deckId: deck._id,
+                        deckTitle: deck.title,
+                        content: c.content,
+                        createdAt: c.createdAt
+                    });
+                }
+                // 대댓글 찾기
+                if (c.replies) {
+                    c.replies.forEach(r => {
+                        if (r.writer === nickname) {
+                            myComments.push({
+                                deckId: deck._id,
+                                deckTitle: deck.title,
+                                content: r.content,
+                                createdAt: r.createdAt
+                            });
+                        }
+                    });
+                }
+            });
+        });
+        // 최신순 정렬
+        myComments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        // 4. 내가 좋아요한 덱
+        const likedDecks = await Deck.find({ likedBy: nickname }).sort({ createdAt: -1 });
+
+        res.status(200).json({
+            user,
+            myDecks,
+            myComments,
+            likedDecks
+        });
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
 // 서버 실행
 if (require.main === module) {
     const PORT = process.env.PORT || 5000;

@@ -2,21 +2,28 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>관리자 문의함 - OPTC</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/user-list.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style> .reply-status.done { color: #4caf50; } .reply-status.wait { color: #ff9800; } </style>
 </head>
 <body>
     <header class="navbar">
-        <div class="nav-left"><a href="index.html" class="logo">OPTC 관리자</a></div>
+        <div class="nav-left">
+            <a href="index.html" class="logo">OPTC 관리자</a>
+        </div>
+        <div class="nav-right">
+            <a href="index.html" class="icon-btn"><i class="fa-solid fa-home"></i></a>
+        </div>
     </header>
+
     <main class="container">
         <div class="user-list-wrapper">
-            <h2><i class="fa-solid fa-inbox"></i> 도착한 문의 목록</h2>
+            <h2 style="margin-bottom: 20px;"><i class="fa-solid fa-envelope-open-text"></i> 도착한 문의 목록</h2>
+            
             <div class="table-container">
-                <table class="user-table">
+                <table class="user-table inquiry-table">
                     <thead>
                         <tr>
                             <th>작성자</th>
@@ -24,20 +31,28 @@
                             <th>유형</th>
                             <th>상태</th>
                             <th>내용/답장</th>
-                            <th>관리</th> </tr>
+                            <th>관리</th>
+                        </tr>
                     </thead>
-                    <tbody id="inquiry-list"></tbody>
+                    <tbody id="inquiry-list">
+                        </tbody>
                 </table>
             </div>
         </div>
     </main>
+
     <div id="reply-modal" class="modal hidden">
         <div class="modal-content">
-            <div class="modal-header"><h3>문의 답장</h3></div>
+            <div class="modal-header">
+                <h3>문의 답장</h3>
+            </div>
             <div class="modal-body">
-                <div style="background:#222; padding:10px; margin-bottom:10px; color:#ddd;" id="view-content"></div>
+                <p style="margin-bottom:5px; color:var(--sub-text-color);">문의 내용:</p>
+                <div style="background:var(--btn-bg); padding:15px; margin-bottom:20px; color:var(--text-color); border-radius:8px; line-height:1.5; max-height:150px; overflow-y:auto;" id="view-content"></div>
+                
                 <div class="inquiry-form-group">
-                    <textarea id="reply-text" placeholder="답장을 입력하세요."></textarea>
+                    <label for="reply-text">답장 작성</label>
+                    <textarea id="reply-text" placeholder="답장을 입력하세요." style="height:120px;"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -46,6 +61,7 @@
             </div>
         </div>
     </div>
+
     <script src="js/admin-inquiries.js"></script>
 </body>
 </html>

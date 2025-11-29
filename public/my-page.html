@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이 페이지 - OPTC 커뮤니티</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/my-page.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-left"><a href="index.html" class="logo">OPTC 커뮤니티</a></div>
+        <div class="nav-right">
+            <a href="user-list.html" class="icon-btn"><i class="fa-solid fa-users"></i></a>
+            <button id="theme-toggle" class="icon-btn"><i class="fa-solid fa-moon"></i></button>
+            <div class="hamburger-container">
+                <button class="icon-btn hamburger"><i class="fa-solid fa-bars"></i></button>
+                <div id="mobile-menu" class="mobile-menu"></div>
+            </div>
+            <div class="nav-auth-area"></div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="my-wrapper">
+            
+            <a href="#" onclick="history.back(); return false;" class="back-link">
+                <i class="fa-solid fa-arrow-left"></i> 뒤로가기
+            </a>
+
+            <section class="profile-card">
+                <div class="profile-icon"><i class="fa-solid fa-user"></i></div>
+                <div class="profile-info">
+                    <h2 id="my-nickname">로딩 중...</h2>
+                    <p id="my-join-date" class="join-date">가입일: -</p>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <span class="stat-num" id="stat-decks">0</span>
+                        <span class="stat-label">작성 덱</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-num" id="stat-comments">0</span>
+                        <span class="stat-label">작성 댓글</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-num" id="stat-likes">0</span>
+                        <span class="stat-label">좋아요 덱</span>
+                    </div>
+                </div>
+            </section>
+
+            <div class="tab-menu">
+                <button class="tab-btn active" onclick="switchTab('decks')">내가 쓴 덱</button>
+                <button class="tab-btn" onclick="switchTab('comments')">내가 쓴 댓글</button>
+                <button class="tab-btn" onclick="switchTab('likes')">좋아요한 덱</button>
+            </div>
+
+            <div id="tab-content-decks" class="tab-content active">
+                <div class="list-container" id="list-decks">로딩 중...</div>
+            </div>
+            <div id="tab-content-comments" class="tab-content">
+                <div class="list-container" id="list-comments">로딩 중...</div>
+            </div>
+            <div id="tab-content-likes" class="tab-content">
+                <div class="list-container" id="list-likes">로딩 중...</div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/script.js"></script>
+    <script src="js/my-page.js"></script>
+</body>
+</html>

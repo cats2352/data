@@ -10,19 +10,24 @@
 .user-list-wrapper h2 { margin-bottom: 0.5rem; color: var(--text-color); }
 .page-desc { color: var(--sub-text-color); margin-bottom: 2rem; }
 
-/* 테이블 스타일 */
+/* --- 테이블 컨테이너 (스크롤 핵심) --- */
 .table-container {
-    overflow-x: auto;
+    width: 100%;
+    overflow-x: auto; /* 내용이 넘치면 가로 스크롤 생성 */
     background-color: var(--card-bg);
     border-radius: 12px;
     border: 1px solid var(--border-color);
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    /* 모바일에서 스크롤이 부드럽게 되도록 설정 */
+    -webkit-overflow-scrolling: touch; 
 }
 
+/* 테이블 스타일 */
 .user-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 600px;
+    /* 최소 너비를 지정하여 모바일에서 찌그러지지 않고 스크롤되게 함 */
+    min-width: 700px; 
 }
 
 .user-table th, .user-table td {
@@ -30,6 +35,8 @@
     text-align: left;
     border-bottom: 1px solid var(--border-color);
     color: var(--text-color);
+    vertical-align: middle;
+    white-space: nowrap; /* 텍스트 줄바꿈 방지 (한 줄로 유지) */
 }
 
 .user-table th {
@@ -37,28 +44,41 @@
     font-weight: bold;
     color: var(--sub-text-color);
     font-size: 0.9rem;
-    white-space: nowrap;
 }
 
 .user-table tbody tr:last-child td { border-bottom: none; }
 .user-table tbody tr:hover { background-color: var(--btn-hover); }
 
-/* 배지 & 버튼 */
-.admin-badge {
-    background-color: var(--accent-color);
-    color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; vertical-align: middle;
-}
+/* --- 문의함 상태 텍스트 색상 --- */
+.reply-status.done { color: #4caf50; font-weight: bold; }
+.reply-status.wait { color: #ff9800; font-weight: bold; }
 
+/* --- 버튼 스타일 --- */
 .manage-btn-group { display: flex; gap: 8px; }
 .admin-btn {
-    padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.8rem; color: white; white-space: nowrap;
+    padding: 6px 12px; 
+    border-radius: 6px; 
+    border: none; 
+    cursor: pointer; 
+    font-size: 0.85rem; 
+    color: white; 
+    white-space: nowrap;
+    transition: 0.2s;
 }
+.admin-btn:hover { opacity: 0.9; }
+
 .edit-user-btn { background-color: #58a6ff; }
 .del-user-btn { background-color: #ff6b6b; }
 
 .hidden { display: none !important; }
 
-/* --- [추가] 검색창 스타일 --- */
+/* 배지 */
+.admin-badge {
+    background-color: var(--accent-color);
+    color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; vertical-align: middle;
+}
+
+/* --- 검색창 스타일 --- */
 .search-container {
     display: flex;
     justify-content: flex-end;
@@ -88,7 +108,7 @@
 }
 .search-container button:hover { background-color: var(--btn-hover); }
 
-/* --- [추가] 페이지네이션 스타일 --- */
+/* --- 페이지네이션 스타일 --- */
 .pagination {
     display: flex;
     justify-content: center;

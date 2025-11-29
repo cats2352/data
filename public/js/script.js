@@ -24,17 +24,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-// --- 2. 햄버거 메뉴 기능 (수정됨: 쪽지함 추가) ---
+    // --- 2. 햄버거 메뉴 기능 ---
     const hamburgerBtn = document.querySelector('.hamburger');
     const mobileMenu = document.getElementById('mobile-menu');
+    const userNickname = localStorage.getItem('userNickname');
+    const isAdmin = localStorage.getItem('isAdmin') === 'true';
 
-    // 모바일 메뉴 내용을 스크립트로 주입 (모든 페이지 공통 적용을 위해)
+    // 모바일 메뉴 내용을 스크립트로 주입
     if (mobileMenu) {
-        // 기존 내용 초기화 후 새로 작성
+        let adminLinkHtml = '';
+        if (isAdmin) {
+            adminLinkHtml = `<a href="admin-inquiries.html" class="menu-item" style="color:#ff9800"><i class="fa-solid fa-envelope-open-text"></i> 관리자 문의함</a>`;
+        }
+
+        // 로그인 여부에 따른 마이 페이지 링크 추가
+        let myPageLink = userNickname ? `<a href="my-page.html" class="menu-item"><i class="fa-solid fa-address-card"></i> 마이 페이지</a>` : '';
+
         mobileMenu.innerHTML = `
             <a href="index.html" class="menu-item"><i class="fa-solid fa-layer-group"></i> 덱 공유</a>
             <a href="team-list.html" class="menu-item"><i class="fa-solid fa-flag"></i> 팀트갤 모집</a>
             <a href="inbox.html" class="menu-item"><i class="fa-solid fa-envelope"></i> 쪽지함</a>
+            ${myPageLink}
+            ${adminLinkHtml}
             <div class="menu-divider"></div>
             <a href="user-list.html" class="menu-item"><i class="fa-solid fa-users"></i> 유저 목록</a>
         `;
@@ -54,9 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 3. 로그인 상태 UI 변경 ---
-    const userNickname = localStorage.getItem('userNickname');
-    const isAdmin = localStorage.getItem('isAdmin') === 'true'; // 관리자 여부
-    
     const navRight = document.querySelector('.nav-right');
     const authArea = document.querySelector('.nav-auth-area');
     const loginBtn = document.querySelector('.login-btn');
@@ -64,30 +72,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (userNickname) {
         if (loginBtn) loginBtn.remove();
 
-        // ★ [수정] 상단 프로필 옆 아이콘 코드는 삭제했습니다.
-        // 대신 햄버거 메뉴(모바일 메뉴)에는 관리자 링크를 추가해둡니다.
-        if (isAdmin && mobileMenu) {
-            // 이미 추가된 적 있는지 확인 후 추가 (중복 방지)
-            if (!mobileMenu.querySelector('.admin-link-item')) {
-                const divider = document.createElement('div');
-                divider.className = 'menu-divider';
-                mobileMenu.appendChild(divider);
-
-                const adminLink = document.createElement('a');
-                adminLink.href = 'admin-inquiries.html';
-                adminLink.className = 'menu-item admin-link-item'; // 클래스 추가
-                adminLink.style.color = '#ff9800'; 
-                adminLink.innerHTML = '<i class="fa-solid fa-envelope-open-text"></i> 관리자 문의함';
-                mobileMenu.appendChild(adminLink);
-            }
-        }
-
         const userDiv = document.createElement('div');
         userDiv.className = 'user-profile';
         
-        // 아이콘 없이 닉네임과 로그아웃 버튼만 표시
+        // 닉네임 클릭 시 마이 페이지로 이동하도록 설정
         userDiv.innerHTML = `
-            <span class="user-name"><i class="fa-solid fa-user-circle"></i> ${userNickname}</span>
+            <a href="my-page.html" class="user-name" title="마이 페이지로 이동" style="text-decoration: none; color: inherit;">
+                <i class="fa-solid fa-user-circle"></i> ${userNickname}
+            </a>
             <button id="logout-btn" class="logout-btn" title="로그아웃"><i class="fa-solid fa-right-from-bracket"></i></button>
         `;
 
@@ -100,7 +92,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(confirm('로그아웃 하시겠습니까?')) {
                     localStorage.removeItem('userNickname');
                     localStorage.removeItem('isAdmin');
-                    location.reload();
+                    // 자동 로그인 정보도 삭제할지 선택 가능하지만, 보통은 유지하거나 삭제함
+                    // localStorage.removeItem('savedNickname'); 
+                    // localStorage.removeItem('savedPassword');
+                    location.href = 'index.html'; // 메인으로 이동
                 }
             });
         }
@@ -226,10 +221,14 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) { console.error('알림 로드 실패', err); }
         }
 
-        loadNotifications();
+        // 로그인한 상태에서만 알림 로드
+        if (userNickname) {
+            loadNotifications();
+        }
         
         notiBtn.addEventListener('click', (e) => {
             e.stopPropagation();
+            if (!userNickname) return alert('로그인이 필요합니다.');
             notiDropdown.classList.toggle('active');
         });
 
