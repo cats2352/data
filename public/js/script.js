@@ -2,27 +2,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 1. 테마(다크모드/라이트모드) 설정 ---
     const themeToggleBtn = document.getElementById('theme-toggle');
     const body = document.body;
-    const icon = themeToggleBtn.querySelector('i');
+    const icon = themeToggleBtn ? themeToggleBtn.querySelector('i') : null;
 
-    const currentTheme = localStorage.getItem('theme');
-    if (currentTheme === 'light') {
-        body.classList.add('light-mode');
-        icon.classList.remove('fa-moon');
-        icon.classList.add('fa-sun');
-    }
-
-    themeToggleBtn.addEventListener('click', () => {
-        body.classList.toggle('light-mode');
-        if (body.classList.contains('light-mode')) {
+    if (themeToggleBtn && icon) {
+        const currentTheme = localStorage.getItem('theme');
+        if (currentTheme === 'light') {
+            body.classList.add('light-mode');
             icon.classList.remove('fa-moon');
             icon.classList.add('fa-sun');
-            localStorage.setItem('theme', 'light');
-        } else {
-            icon.classList.remove('fa-sun');
-            icon.classList.add('fa-moon');
-            localStorage.setItem('theme', 'dark');
         }
-    });
+
+        themeToggleBtn.addEventListener('click', () => {
+            body.classList.toggle('light-mode');
+            if (body.classList.contains('light-mode')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'light');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+    }
 
     // --- 2. 햄버거 메뉴 기능 ---
     const hamburgerBtn = document.querySelector('.hamburger');
@@ -84,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         if (authArea) authArea.appendChild(userDiv);
-        else navRight.appendChild(userDiv);
+        else if (navRight) navRight.appendChild(userDiv);
 
         const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) {
@@ -131,7 +133,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (discordBtn) {
         discordBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            alert('공식 디스코드는 현재 준비 중입니다! 🙇‍♂️');
+            // [수정] showToast로 변경
+            showToast('공식 디스코드는 현재 준비 중입니다! 🙇‍♂️', 'info');
         });
     }
 
@@ -146,14 +149,20 @@ document.addEventListener('DOMContentLoaded', () => {
         btnOpenInquiry.addEventListener('click', async (e) => {
             e.preventDefault();
             const currentUser = localStorage.getItem('userNickname');
-            if (!currentUser) return alert('로그인이 필요합니다.');
+            if (!currentUser) {
+                // [수정] showToast로 변경
+                showToast('로그인이 필요합니다.', 'error');
+                return;
+            }
 
             try {
                 const res = await fetch('/api/admins');
                 const admins = await res.json();
                 adminSelect.innerHTML = admins.map(a => `<option value="${a.nickname}">${a.nickname} (관리자)</option>`).join('');
                 inquiryModal.classList.remove('hidden');
-            } catch (err) { alert('관리자 목록 로딩 실패'); }
+            } catch (err) { 
+                showToast('관리자 목록 로딩 실패', 'error');
+            }
         });
 
         if(btnCloseInquiry) btnCloseInquiry.addEventListener('click', () => inquiryModal.classList.add('hidden'));
@@ -165,7 +174,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const content = document.getElementById('inq-content').value.trim();
                 const writer = localStorage.getItem('userNickname');
 
-                if (!content) return alert('내용을 입력하세요.');
+                if (!content) {
+                    showToast('내용을 입력하세요.', 'error');
+                    return;
+                }
 
                 try {
                     const res = await fetch('/api/inquiries', {
@@ -175,13 +187,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     const data = await res.json();
                     if (res.ok) {
-                        alert(data.message);
+                        showToast(data.message, 'success');
+                        
                         document.getElementById('inq-content').value = '';
                         inquiryModal.classList.add('hidden');
                     } else {
-                        alert(data.message);
+                        showToast(data.message, 'error');
                     }
-                } catch (err) { alert('서버 오류'); }
+                } catch (err) { 
+                    showToast('서버 오류', 'error'); 
+                }
             });
         }
     }
@@ -228,7 +243,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         notiBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (!userNickname) return alert('로그인이 필요합니다.');
+            if (!userNickname) {
+                showToast('로그인이 필요합니다.', 'error');
+                return;
+            }
             notiDropdown.classList.toggle('active');
         });
 
@@ -243,4 +261,47 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-});
+}); 
+
+// ▼▼▼ showToast 함수 (전역 범위) ▼▼▼
+
+/**
+ * 토스트 알림을 띄우는 함수
+ * @param {string} message - 표시할 메시지
+ * @param {string} type - 알림 타입 ('success', 'error', 'info' 등) - 기본값: 'info'
+ */
+function showToast(message, type = 'info') {
+    // 1. 컨테이너가 없으면 생성
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    // 2. 아이콘 결정
+    let iconClass = 'fa-solid fa-circle-info';
+    if (type === 'success') iconClass = 'fa-solid fa-circle-check';
+    if (type === 'error') iconClass = 'fa-solid fa-circle-exclamation';
+
+    // 3. 토스트 요소 생성
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <i class="${iconClass}"></i>
+        <span>${message}</span>
+    `;
+
+    // 4. 컨테이너에 추가
+    container.appendChild(toast);
+
+    // 5. 3초 후 삭제 (애니메이션 포함)
+    setTimeout(() => {
+        toast.style.animation = 'toastFadeOut 0.4s forwards';
+        toast.addEventListener('animationend', () => {
+            toast.remove();
+            if (container.children.length === 0) container.remove();
+        });
+    }, 3000); // 3초 유지
+}

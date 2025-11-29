@@ -1,10 +1,28 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    // -----------------------------------------------------------
+    // ★ [안전장치] 알림 함수 정의
+    // -----------------------------------------------------------
+    const notify = (message, type = 'info') => {
+        if (typeof showToast === 'function') {
+            showToast(message, type);
+        } else {
+            alert(message);
+        }
+    };
+
     const params = new URLSearchParams(window.location.search);
     const teamId = params.get('id');
     const isAdmin = localStorage.getItem('isAdmin') === 'true';
     const userNickname = localStorage.getItem('userNickname');
 
-    if (!teamId) { alert('잘못된 접근입니다.'); location.href = 'team-list.html'; return; }
+    // 잘못된 접근 처리
+    if (!teamId) { 
+        notify('잘못된 접근입니다.', 'error'); 
+        setTimeout(() => {
+            location.href = 'team-list.html'; 
+        }, 1500);
+        return; 
+    }
 
     let teamData = null; 
 
@@ -38,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderAll(teamData);
         } catch (err) {
             console.error(err);
-            alert('데이터를 불러올 수 없습니다.');
+            notify('데이터를 불러올 수 없습니다.', 'error');
         }
     }
 
@@ -75,8 +93,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if(confirm('정말 삭제하시겠습니까?')) {
                         try {
                             const res = await fetch(`/api/teams/${teamId}`, { method: 'DELETE' });
-                            if(res.ok) { alert('삭제됨'); location.href='team-list.html'; }
-                        } catch(e) {}
+                            if(res.ok) { 
+                                notify('삭제되었습니다.', 'success'); 
+                                setTimeout(() => {
+                                    location.href='team-list.html'; 
+                                }, 1500);
+                            }
+                        } catch(e) { console.error(e); }
                     }
                 };
             }
@@ -96,7 +119,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 4. 로그
         renderLogs(team.logs, team.isLogPublic);
 
-        // 5. ★ [추가] 댓글 섹션 제어
+        // 5. 댓글 섹션 제어
         if (team.isCommentAllowed) {
             commentInputArea.classList.remove('hidden');
             commentDisabledMsg.classList.add('hidden');
@@ -144,9 +167,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 댓글 등록 버튼
     if (btnSubmitComment) {
         btnSubmitComment.addEventListener('click', async () => {
-            if (!userNickname) return alert('로그인이 필요합니다.');
+            if (!userNickname) return notify('로그인이 필요합니다.', 'error');
             const content = commentInput.value.trim();
-            if (!content) return alert('내용을 입력하세요.');
+            if (!content) return notify('내용을 입력하세요.', 'error');
 
             try {
                 const res = await fetch(`/api/teams/${teamId}/comments`, {
@@ -159,7 +182,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     loadTeamData(); // 화면 갱신
                 } else {
                     const data = await res.json();
-                    alert(data.message);
+                    notify(data.message, 'error');
                 }
             } catch (e) { console.error(e); }
         });
@@ -175,9 +198,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 body: JSON.stringify({ userNickname })
             });
             if (res.ok) {
+                notify('댓글이 삭제되었습니다.', 'success');
                 loadTeamData();
             } else {
-                alert('권한이 없습니다.');
+                notify('권한이 없습니다.', 'error');
             }
         } catch (e) { console.error(e); }
     };
@@ -198,10 +222,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     body: JSON.stringify(updateData)
                 });
                 if(res.ok) {
-                    alert('설정이 변경되었습니다.');
+                    notify('설정이 변경되었습니다.', 'success');
                     settingsModal.classList.add('hidden');
                     loadTeamData();
-                } else { alert('변경 실패'); }
+                } else { notify('변경 실패', 'error'); }
             } catch (e) { console.error(e); }
         };
     }
@@ -285,7 +309,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 body: JSON.stringify({ slotIndex: index, action, newName, adminName: userNickname })
             });
             if (res.ok) loadTeamData();
-            else alert('처리 실패');
+            else notify('처리 실패', 'error');
         } catch (e) { console.error(e); }
     };
 });

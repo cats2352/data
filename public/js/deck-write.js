@@ -1,4 +1,12 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    // [추가] 알림 안전장치 함수
+    const notify = (message, type = 'info') => {
+        if (typeof showToast === 'function') {
+            showToast(message, type);
+        } else {
+            alert(message);
+        }
+    };
     // --- 1. URL 파라미터 파싱 및 초기화 ---
     const params = new URLSearchParams(window.location.search);
     
@@ -367,7 +375,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 updateAllUI(); // ★ UI 전체 갱신
             } else {
-                alert('오류'); window.location.href = 'deck-share.html';
+                notify('데이터를 불러올 수 없습니다.', 'error');
+                setTimeout(() => { window.location.href = 'deck-share.html'; }, 1500);
             }
         } catch (err) { console.error(err); }
     } else {
@@ -495,15 +504,16 @@ function renderSearchResults(keyword) {
             const description = descInput.value.trim();
             const userNickname = localStorage.getItem('userNickname');
 
-            if (!userNickname) return alert('로그인 후 이용해주세요.');
-            if (!title) return alert('덱 제목을 입력해주세요!');
+            // [수정] 유효성 검사 알림
+            if (!userNickname) return notify('로그인 후 이용해주세요.', 'error');
+            if (!title) return notify('덱 제목을 입력해주세요!', 'error');
             
             const deckData = {
                 title, description,
                 writer: userNickname,
                 mainContent, 
                 subContent: editDeckId ? subInput.value : subEventName, 
-                characters: deckState, // ★ 옵션 정보도 여기 포함되어 전송됨
+                characters: deckState, 
                 rounds: isRoundMode() ? roundState : [] 
             };
 
@@ -521,11 +531,21 @@ function renderSearchResults(keyword) {
                     });
                 }
                 const result = await response.json();
+                
                 if (response.ok) {
-                    alert(editDeckId ? '수정되었습니다!' : '저장되었습니다!');
-                    window.location.href = 'deck-share.html';
-                } else { alert('실패: ' + result.message); }
-            } catch (error) { console.error(error); alert('서버 오류'); }
+                    // [수정] 성공 알림 및 페이지 이동
+                    notify(editDeckId ? '수정되었습니다!' : '저장되었습니다!', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'deck-share.html';
+                    }, 1500);
+                } else { 
+                    // [수정] 실패 알림
+                    notify('실패: ' + result.message, 'error'); 
+                }
+            } catch (error) { 
+                console.error(error); 
+                notify('서버 오류가 발생했습니다.', 'error'); 
+            }
         });
     }
 });

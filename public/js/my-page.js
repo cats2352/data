@@ -1,8 +1,21 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    // -----------------------------------------------------------
+    // ★ [안전장치] 알림 함수 정의
+    // -----------------------------------------------------------
+    const notify = (message, type = 'info') => {
+        if (typeof showToast === 'function') {
+            showToast(message, type);
+        } else {
+            alert(message);
+        }
+    };
+
     const currentUser = localStorage.getItem('userNickname');
     if (!currentUser) {
-        alert('로그인이 필요합니다.');
-        location.href = 'login.html';
+        notify('로그인이 필요합니다.', 'error');
+        setTimeout(() => {
+            location.href = 'login.html';
+        }, 1000);
         return;
     }
 
@@ -27,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     } catch (e) {
         console.error(e);
-        alert('정보를 불러오는데 실패했습니다.');
+        notify('정보를 불러오는데 실패했습니다.', 'error');
     }
 });
 

@@ -38,7 +38,10 @@
                         </div>
                         <div class="input-group">
                             <label>비밀번호</label>
-                            <input type="password" id="reg-password" placeholder="4자리 이상 (한글 불가)" minlength="4" required>
+                            <div class="password-wrapper">
+                                <input type="password" id="reg-password" placeholder="4자리 이상 (한글 불가)" minlength="4" required>
+                                <i class="fa-solid fa-eye toggle-pw-btn" data-target="reg-password"></i>
+                            </div>
                         </div>
                         <button type="submit" class="go-btn full-width">가입 완료</button>
                     </form>
@@ -67,7 +70,10 @@
                         </div>
                         <div class="input-group">
                             <label>비밀번호</label>
-                            <input type="password" id="login-password" placeholder="비밀번호 입력" required>
+                            <div class="password-wrapper">
+                                <input type="password" id="login-password" placeholder="비밀번호 입력" required>
+                                <i class="fa-solid fa-eye toggle-pw-btn" data-target="login-password"></i>
+                            </div>
                         </div>
 
                         <div class="checkbox-group">

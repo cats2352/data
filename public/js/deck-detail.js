@@ -1,4 +1,15 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    // -----------------------------------------------------------
+    // ★ [안전장치] 알림 함수 정의
+    // -----------------------------------------------------------
+    const notify = (message, type = 'info') => {
+        if (typeof showToast === 'function') {
+            showToast(message, type);
+        } else {
+            alert(message);
+        }
+    };
+
     let commentsData = []; 
     let currentCommentSort = 'oldest'; 
 
@@ -7,8 +18,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const deckId = params.get('id');
 
     if (!deckId) {
-        alert('잘못된 접근입니다.');
-        window.location.href = 'deck-share.html';
+        notify('잘못된 접근입니다.', 'error');
+        setTimeout(() => { window.location.href = 'deck-share.html'; }, 1500);
         return;
     }
 
@@ -18,8 +29,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const deck = await response.json();
 
         if (!response.ok) {
-            alert(deck.message || '덱을 불러올 수 없습니다.');
-            window.location.href = 'deck-share.html';
+            notify(deck.message || '덱을 불러올 수 없습니다.', 'error');
+            setTimeout(() => { window.location.href = 'deck-share.html'; }, 1500);
             return;
         }
 
@@ -28,7 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     } catch (error) {
         console.error('Error:', error);
-        alert('서버 오류가 발생했습니다.');
+        notify('서버 오류가 발생했습니다.', 'error');
     }
 
     function renderDeckDetail(deck) {
@@ -41,8 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         document.getElementById('detail-description').textContent = deck.description || '작성된 설명이 없습니다.';
 
-        // 배지
-        // ★ [추가] 해적왕의 궤적 매핑
+        // 배지 & 컨텐츠명 매핑
         const contentMap = { 
             'pirate_festival': '해적제', 'kizuna': '유대결전', 
             'treasure_map': '트레저맵', 'coop': '공동전투',
@@ -60,7 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const rowSub = document.getElementById('row-sub');
         const labels = document.querySelectorAll('.formation-label');
 
-        // ★ [수정] 해적왕의 궤적(pirate_trail)도 10칸 모드 적용
+        // 해적왕의 궤적 등 10칸 모드 적용
         if (deck.mainContent === 'kizuna' || deck.mainContent === 'treasure_map' || deck.mainContent === 'pirate_trail') {
             labels[0].textContent = "메인";
             labels[1].textContent = "서포터";
@@ -147,7 +157,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const sectionTitle = container.previousElementSibling; 
         container.innerHTML = ''; 
 
-        // ★ [수정] 해적왕의 궤적(pirate_trail)도 라운드 모드 조건에 추가
         const isRoundMode = (deck.rounds && deck.rounds.length > 0) || 
                             (deck.mainContent === 'kizuna' || deck.mainContent === 'treasure_map' || deck.mainContent === 'pirate_trail');
 
@@ -251,7 +260,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const item = document.createElement('div');
             item.className = 'comment-item';
             
-            // ★ [핵심 수정] reply-form에 style="display: none;" 추가하여 확실하게 숨김
             item.innerHTML = `
                 <div class="comment-header">
                     <span class="comment-writer"><i class="fa-solid fa-user-circle"></i> ${comment.writer}</span>
@@ -311,9 +319,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     function attachCommentEvents() {
         const currentUser = localStorage.getItem('userNickname');
 
-                document.querySelectorAll('.reply-open-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                if (!currentUser) return alert('로그인이 필요합니다.');
+        document.querySelectorAll('.reply-open-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!currentUser) return notify('로그인이 필요합니다.', 'error');
                 const cid = btn.dataset.id;
                 const writer = btn.dataset.writer;
                 const form = document.getElementById(`reply-form-${cid}`);
@@ -323,13 +331,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 input.dataset.tag = writer; 
                 input.placeholder = `@${writer} 님에게 답글 남기기...`;
                 
-                // ★ [핵심 수정] display 스타일 토글 로직 추가
                 if (form.style.display === 'none' || form.style.display === '') {
-                    form.style.display = 'flex'; // 보이게 함
+                    form.style.display = 'flex'; 
                     form.classList.remove('hidden');
                     input.focus();
                 } else {
-                    form.style.display = 'none'; // 숨김
+                    form.style.display = 'none'; 
                     form.classList.add('hidden');
                 }
             });
@@ -337,7 +344,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.querySelectorAll('.like-comment-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
-                if (!currentUser) return alert('로그인이 필요합니다.');
+                if (!currentUser) return notify('로그인이 필요합니다.', 'error');
                 const cid = btn.dataset.id;
                 await toggleLike('comments', cid);
             });
@@ -345,7 +352,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.querySelectorAll('.like-reply-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
-                if (!currentUser) return alert('로그인이 필요합니다.');
+                if (!currentUser) return notify('로그인이 필요합니다.', 'error');
                 const cid = btn.dataset.cid;
                 const rid = btn.dataset.rid;
                 await toggleLike('replies', cid, rid);
@@ -360,7 +367,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const content = input.value.trim();
                 const tag = input.dataset.tag || '';
 
-                if (!content) return alert('내용을 입력하세요.');
+                if (!content) return notify('내용을 입력하세요.', 'error');
 
                 try {
                     const res = await fetch(`/api/decks/${deckId}/comments/${cid}/replies`, {
@@ -376,7 +383,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         });
 
-        // ★ [추가] 댓글 삭제 버튼 이벤트 리스너
+        // 댓글 삭제 (성공/실패 메시지 notify로 변경)
         document.querySelectorAll('.delete-comment-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 if(!confirm('댓글을 삭제하시겠습니까?')) return;
@@ -385,19 +392,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const res = await fetch(`/api/decks/${deckId}/comments/${cid}`, {
                         method: 'DELETE',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userNickname: currentUser }) // 요청자 정보(관리자 여부 확인용)
+                        body: JSON.stringify({ userNickname: currentUser })
                     });
                     if (res.ok) {
+                        notify('댓글이 삭제되었습니다.', 'success');
                         const newComments = await res.json();
                         initComments(newComments);
                     } else {
-                        alert('삭제 권한이 없습니다.');
+                        notify('삭제 권한이 없습니다.', 'error');
                     }
                 } catch(e) { console.error(e); }
             });
         });
 
-        // ★ [추가] 답글 삭제 버튼 이벤트 리스너
+        // 답글 삭제 (성공/실패 메시지 notify로 변경)
         document.querySelectorAll('.delete-reply-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 if(!confirm('답글을 삭제하시겠습니까?')) return;
@@ -410,10 +418,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         body: JSON.stringify({ userNickname: currentUser })
                     });
                     if (res.ok) {
+                        notify('답글이 삭제되었습니다.', 'success');
                         const newComments = await res.json();
                         initComments(newComments);
                     } else {
-                        alert('삭제 권한이 없습니다.');
+                        notify('삭제 권한이 없습니다.', 'error');
                     }
                 } catch(e) { console.error(e); }
             });
@@ -424,11 +433,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (commentSubmitBtn) {
         commentSubmitBtn.addEventListener('click', async () => {
             const currentUser = localStorage.getItem('userNickname');
-            if (!currentUser) return alert('로그인이 필요합니다.');
+            if (!currentUser) return notify('로그인이 필요합니다.', 'error');
             
             const input = document.getElementById('comment-input');
             const content = input.value.trim();
-            if (!content) return alert('내용을 입력하세요.');
+            if (!content) return notify('내용을 입력하세요.', 'error');
 
             try {
                 const res = await fetch(`/api/decks/${deckId}/comments`, {

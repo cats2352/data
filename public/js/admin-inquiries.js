@@ -1,9 +1,22 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    // -----------------------------------------------------------
+    // ★ [안전장치] 알림 함수 정의
+    // -----------------------------------------------------------
+    const notify = (message, type = 'info') => {
+        if (typeof showToast === 'function') {
+            showToast(message, type);
+        } else {
+            alert(message);
+        }
+    };
+
     // 1. 관리자 체크
     const isAdmin = localStorage.getItem('isAdmin') === 'true';
     if (!isAdmin) { 
-        alert('관리자만 접근 가능합니다.'); 
-        location.href = 'index.html'; 
+        notify('관리자만 접근 가능합니다.', 'error');
+        setTimeout(() => {
+            location.href = 'index.html'; 
+        }, 1000);
         return; 
     }
 
@@ -25,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            // ★ HTML 생성 (data-label 속성 필수)
+            // HTML 생성 (data-label 속성 필수)
             listContainer.innerHTML = inquiriesData.map((inq) => `
                 <tr>
                     <td data-label="작성자">${inq.writer}</td>
@@ -72,7 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const replyContent = document.getElementById('reply-text').value;
             const adminName = localStorage.getItem('userNickname');
             
-            if (!replyContent) return alert('내용을 입력하세요.');
+            if (!replyContent) return notify('내용을 입력하세요.', 'error');
 
             try {
                 const res = await fetch(`/api/inquiries/${currentInquiryId}/reply`, {
@@ -82,13 +95,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
                 
                 if (res.ok) {
-                    alert('답장이 전송되었습니다.');
+                    notify('답장이 전송되었습니다.', 'success');
                     modal.classList.add('hidden');
                     loadInquiries(); // 목록 갱신
                 } else { 
-                    alert('전송 실패'); 
+                    notify('전송 실패', 'error'); 
                 }
-            } catch (e) { alert('오류 발생'); }
+            } catch (e) { notify('오류 발생', 'error'); }
         });
     }
 
@@ -98,9 +111,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const res = await fetch(`/api/inquiries/${id}`, { method: 'DELETE' });
             if (res.ok) {
-                alert('삭제되었습니다.');
+                notify('삭제되었습니다.', 'success');
                 loadInquiries();
-            } else { alert('삭제 실패'); }
-        } catch (e) { alert('오류 발생'); }
+            } else { notify('삭제 실패', 'error'); }
+        } catch (e) { notify('오류 발생', 'error'); }
     };
 });

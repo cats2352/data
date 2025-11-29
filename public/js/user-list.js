@@ -1,3 +1,15 @@
+// -----------------------------------------------------------
+// ★ [안전장치] 알림 함수 정의
+// 전역 함수들(editUser 등)에서도 쓸 수 있도록 최상단에 정의합니다.
+// -----------------------------------------------------------
+const notify = (message, type = 'info') => {
+    if (typeof showToast === 'function') {
+        showToast(message, type);
+    } else {
+        alert(message);
+    }
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
     const tableBody = document.getElementById('user-table-body');
     const paginationDiv = document.getElementById('pagination');
@@ -50,7 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let adminBtns = '';
                 
                 if (isAdmin && user.nickname !== currentUser) {
-                    // ★ [수정] 승인 여부에 따라 버튼 분기 처리
+                    // 승인 여부에 따라 버튼 분기 처리
                     if (user.isApproved === false) {
                         // 1) 승인 대기 상태: 승인 / 거절 버튼 노출
                         adminBtns = `
@@ -180,12 +192,12 @@ window.editUser = async (id, oldName) => {
                 body: JSON.stringify({ newNickname: newName })
             });
             if (res.ok) {
-                alert('변경되었습니다.');
-                location.reload();
+                notify('변경되었습니다.', 'success');
+                setTimeout(() => location.reload(), 1000);
             } else {
-                alert((await res.json()).message);
+                notify((await res.json()).message, 'error');
             }
-        } catch (e) { alert('오류 발생'); }
+        } catch (e) { notify('오류 발생', 'error'); }
     }
 };
 
@@ -195,10 +207,12 @@ window.deleteUser = async (id, name) => {
         try {
             const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
             if (res.ok) {
-                alert('추방 처리되었습니다.');
-                location.reload();
+                notify('추방 처리되었습니다.', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                notify('오류 발생', 'error');
             }
-        } catch (e) { alert('오류 발생'); }
+        } catch (e) { notify('오류 발생', 'error'); }
     }
 };
 
@@ -208,27 +222,32 @@ window.approveUser = async (id, name) => {
         try {
             const res = await fetch(`/api/users/${id}/approve`, { method: 'PUT' });
             if (res.ok) {
-                alert('승인되었습니다.');
-                location.reload();
+                notify('승인되었습니다.', 'success');
+                setTimeout(() => location.reload(), 1000);
             } else {
-                alert('오류가 발생했습니다.');
+                notify('오류가 발생했습니다.', 'error');
             }
-        } catch (e) { console.error(e); alert('서버 오류'); }
+        } catch (e) { 
+            console.error(e); 
+            notify('서버 오류', 'error'); 
+        }
     }
 };
 
 // 4. 가입 거절 (가입 대기자 삭제)
-// 기능적으로는 deleteUser와 같지만, 메시지와 맥락을 다르게 보여주기 위해 분리했습니다.
 window.rejectUser = async (id, name) => {
     if (confirm(`'${name}' 님의 가입 요청을 거절(삭제)하시겠습니까?`)) {
         try {
             const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
             if (res.ok) {
-                alert('가입이 거절되었습니다.');
-                location.reload();
+                notify('가입이 거절되었습니다.', 'success');
+                setTimeout(() => location.reload(), 1000);
             } else {
-                alert('오류가 발생했습니다.');
+                notify('오류가 발생했습니다.', 'error');
             }
-        } catch (e) { console.error(e); alert('서버 오류'); }
+        } catch (e) { 
+            console.error(e); 
+            notify('서버 오류', 'error'); 
+        }
     }
 };

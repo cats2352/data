@@ -1,4 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // -----------------------------------------------------------
+    // ★ [안전장치] 알림 함수 정의
+    // -----------------------------------------------------------
+    const notify = (message, type = 'info') => {
+        if (typeof showToast === 'function') {
+            showToast(message, type);
+        } else {
+            alert(message);
+        }
+    };
+
     // 1. 공통 변수
     const writeBtn = document.querySelector('.write-btn');
     const sortOptions = document.querySelectorAll('.sort-options span');
@@ -34,8 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const userNickname = localStorage.getItem('userNickname');
             if (!userNickname) {
-                alert('로그인이 필요한 서비스입니다.');
-                window.location.href = 'login.html';
+                notify('로그인이 필요한 서비스입니다.', 'error');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1000);
             } else {
                 window.location.href = 'deck-select.html';
             }
@@ -140,16 +153,18 @@ document.addEventListener('DOMContentLoaded', () => {
                         <i class="fa-solid fa-box-open"></i>
                         <p>조건에 맞는 덱이 없습니다.</p>
                     </div>`;
-                deckListContainer.classList.remove('deck-grid-layout');
+                // ★ [수정] 그리드 레이아웃 클래스 제거
+                deckListContainer.classList.remove('deck-list-layout'); 
                 return;
             }
 
             deckListContainer.innerHTML = '';
-            deckListContainer.classList.add('deck-grid-layout');
+            // ★ [수정] 리스트 레이아웃 클래스 추가
+            deckListContainer.classList.add('deck-list-layout');
 
             decks.forEach(deck => {
-                const card = createDeckCard(deck, currentUser);
-                deckListContainer.appendChild(card);
+                const item = createDeckListItem(deck, currentUser);
+                deckListContainer.appendChild(item);
             });
 
         } catch (error) {
@@ -181,7 +196,6 @@ document.addEventListener('DOMContentLoaded', () => {
             'coop': [
                 '준비중'
             ],
-            // ★ [추가] 해적왕의 궤적 데이터
             'pirate_trail': [
                 'VS 키드', 
                 '준비중'
@@ -206,24 +220,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // 초기화 시 필요한 로직이 있다면 여기에
     }
 
-    // 카드 HTML 생성
-    function createDeckCard(deck, currentUser) {
+    // ★ [수정] 리스트 아이템 HTML 생성 함수 (이미지 제거됨)
+    function createDeckListItem(deck, currentUser) {
         const date = new Date(deck.createdAt).toLocaleDateString();
-        let previewImagesHtml = '';
-        const limit = 5; 
         
-        deck.characters.slice(0, limit).forEach(char => {
-            if (char) {
-                previewImagesHtml += `<img src="img/Thumbnail/${char.id}.webp" alt="${char.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">`;
-            } else {
-                previewImagesHtml += `<div class="empty-slot"></div>`;
-            }
-        });
-
         const contentNameMap = {
             'pirate_festival': '해적제', 'kizuna': '유대결전',
             'treasure_map': '트레저맵', 'coop': '공동전투',
-            'pirate_trail': '해적왕의 궤적' // ★ [추가] 맵핑 정보
+            'pirate_trail': '해적왕의 궤적'
         };
         const korContentName = contentNameMap[deck.mainContent] || deck.mainContent;
 
@@ -231,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const heartClass = isLiked ? 'fa-solid' : 'fa-regular';
         const activeClass = isLiked ? 'active' : '';
 
-        // ★ [추가] 댓글 수 계산 로직
+        // 댓글 수 계산 로직
         let totalComments = 0;
         if (deck.comments && Array.isArray(deck.comments)) {
             totalComments = deck.comments.length; // 댓글 수
@@ -240,11 +244,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // ★ [추가] 관리자 여부 확인
+        // 관리자 여부 확인
         const isAdmin = localStorage.getItem('isAdmin') === 'true';
 
         let manageBtnHtml = '';
-        // ★ [수정] 작성자 본인이거나, 관리자이면 관리 버튼 표시
+        // 작성자 본인이거나, 관리자이면 관리 버튼 표시
         if (currentUser && (deck.writer === currentUser || isAdmin)) {
             manageBtnHtml = `
                 <div class="manage-btns">
@@ -254,26 +258,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const article = document.createElement('article');
-        article.className = 'deck-card';
-        // ★ [수정] footer에 stats-group 및 comment-stat 추가
+        article.className = 'deck-list-item'; // ★ 클래스 변경
+        
+        // ★ [수정] HTML 구조 리스트형으로 변경
         article.innerHTML = `
-            <div class="deck-card-header">
-                <span class="badge-main">${korContentName}</span>
-                <span class="badge-sub">${deck.subContent}</span>
-                ${manageBtnHtml}
+            <div class="deck-item-left">
+                <div class="deck-badges">
+                    <span class="badge-main">${korContentName}</span>
+                    <span class="badge-sub">${deck.subContent}</span>
+                </div>
+                <h3 class="deck-title" title="${deck.title}">${deck.title}</h3>
             </div>
-            <div class="deck-card-body">
-                <h3 class="deck-title">${deck.title}</h3>
+            
+            <div class="deck-item-right">
                 <div class="deck-meta">
-                    <span><i class="fa-solid fa-user"></i> ${deck.writer}</span>
-                    <span><i class="fa-regular fa-clock"></i> ${date}</span>
+                    <span class="writer"><i class="fa-solid fa-user"></i> ${deck.writer}</span>
+                    <span class="date">${date}</span>
                 </div>
-                <div class="deck-preview-images">
-                    ${previewImagesHtml}
-                </div>
-            </div>
-            <div class="deck-card-footer">
-                <div class="stats-group">
+                
+                <div class="deck-stats">
                     <button class="like-btn ${activeClass}" data-id="${deck._id}">
                         <i class="${heartClass} fa-heart"></i> <span class="like-count">${deck.likes}</span>
                     </button>
@@ -281,7 +284,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         <i class="fa-regular fa-comment-dots"></i> ${totalComments}
                     </span>
                 </div>
-                <button class="detail-btn">상세보기</button>
+
+                <div class="deck-actions">
+                    ${manageBtnHtml}
+                    <button class="detail-btn">상세보기</button>
+                </div>
             </div>
         `;
 
@@ -298,10 +305,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         body: JSON.stringify({ userNickname: currentUser })
                     });
                     if (res.ok) {
-                        alert('삭제되었습니다.');
+                        notify('삭제되었습니다.', 'success');
                         loadDecks();
                     } else {
-                        alert((await res.json()).message);
+                        const data = await res.json();
+                        notify(data.message, 'error');
                     }
                 } catch (err) { console.error(err); }
             });
@@ -318,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const likeBtn = article.querySelector('.like-btn');
         likeBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
-            if (!currentUser) return alert('로그인이 필요합니다.');
+            if (!currentUser) return notify('로그인이 필요합니다.', 'error');
             try {
                 const res = await fetch(`/api/decks/${deck._id}/like`, {
                     method: 'PUT',
