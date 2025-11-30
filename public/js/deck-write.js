@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // [추가] 알림 안전장치 함수
+    // [알림 함수]
     const notify = (message, type = 'info') => {
         if (typeof showToast === 'function') {
             showToast(message, type);
@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert(message);
         }
     };
+
     // --- 1. URL 파라미터 파싱 및 초기화 ---
     const params = new URLSearchParams(window.location.search);
     
@@ -18,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const contentMap = {
         'pirate_festival': '해적제', 'kizuna': '유대결전',
         'treasure_map': '트레저맵', 'coop': '공동전투',
-        'pirate_trail': '해적왕의 궤적' // ★ 추가
+        'pirate_trail': '해적왕의 궤적'
     };
     
     // --- 2. DOM 요소 변수 선언 ---
@@ -29,7 +30,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const saveBtn = document.getElementById('save-deck-btn');
     const roleList = document.getElementById('role-list'); 
     
-    // ★ 추가: 옵션 리스트 컨테이너
     const optionList = document.getElementById('char-option-list');
 
     const modal = document.getElementById('char-modal');
@@ -37,6 +37,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const searchInput = document.getElementById('char-search-input');
     const searchResults = document.getElementById('search-results');
     
+    // ★ 태그 관련 변수
+    const tagInput = document.getElementById('tag-input');
+    const tagListEl = document.getElementById('tag-list');
+    let tags = [];
+
     let slots = []; 
     let deckState = []; 
     let currentSlotIndex = null;
@@ -105,10 +110,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- 6. UI 업데이트 통합 함수 ---
     function updateAllUI() {
         updateGuideUI();  // 역할/라운드 설명
-        updateOptionUI(); // ★ 캐릭터 옵션 설정
+        updateOptionUI(); // 캐릭터 옵션 설정
     }
 
-    // --- 7. 캐릭터 옵션 UI 생성 (신규 기능) ---
+    // --- 7. 캐릭터 옵션 UI 생성 ---
     function updateOptionUI() {
         optionList.innerHTML = '';
         const hasCharacter = deckState.some(char => char !== null);
@@ -120,7 +125,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         deckState.forEach((char, index) => {
             if (char) {
-                // 옵션 객체 초기화 (없으면 기본값)
                 if (!char.options) {
                     char.options = {
                         isFriend: false, isCaptain: false, isSuperEvo: false,
@@ -131,38 +135,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const row = document.createElement('div');
                 row.className = 'option-item';
 
-                // 왼쪽: 캐릭터 정보
                 const charInfo = `
                     <div class="option-char-info">
                         <img src="img/Thumbnail/${char.id}.webp" class="option-thumb" onerror="this.src='https://via.placeholder.com/60'">
                         <span class="option-name">${char.name}</span>
                     </div>`;
 
-                // 오른쪽: 옵션 컨트롤 생성
                 const controlsDiv = document.createElement('div');
                 controlsDiv.className = 'option-controls';
 
-                // --- 조건별 옵션 표시 로직 ---
-                const isSpecialContent = isRoundMode(); // 유대결전, 트레저맵 여부
-                const isSupportSlot = isSpecialContent && index >= 5; // 5~9번 슬롯은 서포터
+                const isSpecialContent = isRoundMode(); 
+                const isSupportSlot = isSpecialContent && index >= 5; 
 
-                // 1. 친선, 선장 (트레저맵/유대결전 + 메인 슬롯일 때만)
                 if (isSpecialContent && !isSupportSlot) {
                     controlsDiv.appendChild(createCheckbox(char, 'isFriend', '친선'));
                     controlsDiv.appendChild(createCheckbox(char, 'isCaptain', '선장'));
                 }
 
-                // 2. 공통 옵션 (항상 표시)
                 controlsDiv.appendChild(createCheckbox(char, 'isSuperEvo', '초진화'));
-                
-                // 3. 레벨 (입력창)
                 controlsDiv.appendChild(createInput(char, 'minLevel', '캐릭터LV최솟값'));
-
-                // 4. 공통 옵션 (계속)
                 controlsDiv.appendChild(createCheckbox(char, 'isLimitBreak', '한계돌파'));
                 controlsDiv.appendChild(createCheckbox(char, 'isPotential', '잠능작'));
 
-                // 5. 서포트 필수 (트레저맵/유대결전 + 서포터 슬롯일 때만)
                 if (isSpecialContent && isSupportSlot) {
                     controlsDiv.appendChild(createCheckbox(char, 'isSupportReq', '서포트 필수'));
                 }
@@ -174,7 +168,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // 체크박스 생성 헬퍼
     function createCheckbox(char, key, labelText) {
         const label = document.createElement('label');
         label.className = 'chk-label';
@@ -188,16 +181,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         label.appendChild(input);
-        label.appendChild(document.createTextNode(labelText)); // 텍스트 추가
-        // 스타일용 span 감싸기 (선택사항, CSS에서 span+input 체크용)
         const textSpan = document.createElement('span');
         textSpan.textContent = labelText;
-        label.replaceChild(textSpan, label.lastChild); // 텍스트 노드 교체
+        label.appendChild(textSpan);
 
         return label;
     }
 
-    // 입력창 생성 헬퍼
     function createInput(char, key, labelText) {
         const div = document.createElement('div');
         div.className = 'level-input-group';
@@ -207,7 +197,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         label.textContent = labelText;
 
         const input = document.createElement('input');
-        input.type = 'text'; // 숫자 외 문자 입력 방지 원하면 number
+        input.type = 'text'; 
         input.className = 'level-input';
         input.placeholder = 'MAX';
         input.value = char.options[key] || '';
@@ -221,7 +211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return div;
     }
 
-    // --- 8. 가이드 UI (기존 코드) ---
+    // --- 8. 가이드 UI ---
     function updateGuideUI() {
         const sectionTitle = document.querySelector('.role-desc-section .section-title');
         
@@ -270,7 +260,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function renderRoundUI() {
-        // (기존 라운드 UI 코드와 동일, 생략 없이 전체 포함)
         roleList.innerHTML = '';
         const container = document.createElement('div');
         container.className = 'round-container';
@@ -345,6 +334,64 @@ document.addEventListener('DOMContentLoaded', async () => {
         roleList.appendChild(addBtn);
     }
 
+    // --- ★ 태그 기능 구현 ---
+    if (tagInput) {
+        // 엔터키 입력 시 태그 추가
+        tagInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addTag(tagInput.value);
+            }
+        });
+        
+        // 백스페이스로 마지막 태그 삭제
+        tagInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && tagInput.value === '' && tags.length > 0) {
+                removeTag(tags.length - 1);
+            }
+        });
+    }
+
+    function addTag(text) {
+        let tag = text.trim();
+        // # 제거
+        if (tag.startsWith('#')) tag = tag.substring(1);
+        if (tag === '') return;
+        
+        // 중복 및 개수 제한
+        if (tags.includes(tag)) {
+            notify('이미 존재하는 태그입니다.', 'error');
+            tagInput.value = '';
+            return;
+        }
+        if (tags.length >= 5) {
+            notify('태그는 최대 5개까지 가능합니다.', 'error');
+            return;
+        }
+
+        tags.push(tag);
+        renderTags();
+        tagInput.value = '';
+    }
+
+    function removeTag(index) {
+        tags.splice(index, 1);
+        renderTags();
+    }
+
+    function renderTags() {
+        tagListEl.innerHTML = '';
+        tags.forEach((tag, index) => {
+            const span = document.createElement('span');
+            span.className = 'tag-chip';
+            span.innerHTML = `#${tag} <i class="fa-solid fa-xmark" onclick="deleteTag(${index})"></i>`;
+            tagListEl.appendChild(span);
+        });
+    }
+    
+    // 전역 함수로 노출 (onclick용)
+    window.deleteTag = (index) => removeTag(index);
+
     // --- 9. 데이터 로드 (수정 모드) ---
     if (editDeckId) {
         saveBtn.textContent = '수정 완료';
@@ -366,14 +413,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 initFormationUI(); 
 
                 deck.characters.forEach((char, index) => {
-                    // 저장된 옵션이 있으면 같이 로드
                     if (char) {
-                        deckState[index] = char; // 옵션 포함된 객체 할당
+                        deckState[index] = char; 
                         selectCharacter(char.id, char.name, index, char.role, false);
                     }
                 });
+
+                // ★ 태그 불러오기
+                if (deck.tags && Array.isArray(deck.tags)) {
+                    tags = deck.tags;
+                    renderTags();
+                }
                 
-                updateAllUI(); // ★ UI 전체 갱신
+                updateAllUI(); 
             } else {
                 notify('데이터를 불러올 수 없습니다.', 'error');
                 setTimeout(() => { window.location.href = 'deck-share.html'; }, 1500);
@@ -384,17 +436,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateAllUI();
     }
 
-        // --- 10. 공통 기능 ---
-        closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+    // --- 10. 공통 기능 (모달/검색) ---
+    closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
 
-        // ★ [수정] 디바운싱 적용: 0.3초 딜레이 후 검색 실행
-        let debounceTimer;
-        searchInput.addEventListener('input', (e) => {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
-                renderSearchResults(e.target.value.trim());
-            }, 300); // 300ms 동안 입력이 없으면 실행
-        });
+    let debounceTimer;
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            renderSearchResults(e.target.value.trim());
+        }, 300); 
+    });
 
     function isFuzzyMatch(text, keyword) { 
         if (!keyword) return true;
@@ -402,76 +453,62 @@ document.addEventListener('DOMContentLoaded', async () => {
         return new RegExp(pattern, 'i').test(text);
     }
 
-// public/js/deck-write.js
+    function renderSearchResults(keyword) { 
+        searchResults.innerHTML = ''; 
+        if (!keyword || keyword.trim() === '') return;
 
-function renderSearchResults(keyword) { 
-    searchResults.innerHTML = ''; // 기존 결과 초기화
+        let count = 0; 
+        let hasResult = false;
+        const fragment = document.createDocumentFragment(); 
 
-    // ★ [핵심 수정] 검색어가 없거나 공백뿐이면 아무것도 표시하지 않고 종료
-    if (!keyword || keyword.trim() === '') {
-        return;
-    }
+        for (const [id, name] of Object.entries(characterData)) {
+            if (isFuzzyMatch(name, keyword)) {
+                hasResult = true;
+                
+                const div = document.createElement('div');
+                div.className = 'result-item';
+                div.title = name;
 
-    let count = 0; 
-    let hasResult = false;
+                const img = document.createElement('img');
+                img.src = `img/Thumbnail/${id}.webp`; 
+                img.alt = name;
+                img.loading = "lazy";
+                img.onerror = function() { 
+                    this.src = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiB2aWV3Qm94PSIwIDAgMTEyIDExMiI+PHJlY3Qgd2lkdGg9IjExMiIgaGVpZ2h0PSIxMTIiIGZpbGw9IiNjY2NjY2MiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM1NTU1NTUiPk5vIEltZzwvdGV4dD48L3N2Zz4="; 
+                };
 
-    // 대량의 DOM 조작 성능 향상을 위한 프래그먼트 사용
-    const fragment = document.createDocumentFragment(); 
+                const textSpan = document.createElement('span');
+                textSpan.className = 'result-name';
+                textSpan.textContent = name;
 
-    for (const [id, name] of Object.entries(characterData)) {
-        if (isFuzzyMatch(name, keyword)) {
-            hasResult = true;
-            
-            // 1. 아이템 컨테이너
-            const div = document.createElement('div');
-            div.className = 'result-item';
-            div.title = name;
+                div.addEventListener('click', () => { 
+                    selectCharacter(id, name, currentSlotIndex); 
+                    modal.classList.add('hidden'); 
+                });
 
-            // 2. 이미지 (지연 로딩 적용)
-            const img = document.createElement('img');
-            img.src = `img/Thumbnail/${id}.webp`; 
-            img.alt = name;
-            img.loading = "lazy"; // 화면에 보일 때만 로딩
-            img.onerror = function() { 
-                this.src = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiB2aWV3Qm94PSIwIDAgMTEyIDExMiI+PHJlY3Qgd2lkdGg9IjExMiIgaGVpZ2h0PSIxMTIiIGZpbGw9IiNjY2NjY2MiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM1NTU1NTUiPk5vIEltZzwvdGV4dD48L3N2Zz4="; 
-            };
+                div.appendChild(img);
+                div.appendChild(textSpan);
+                fragment.appendChild(div);
 
-            // 3. 캐릭터 이름 텍스트
-            const textSpan = document.createElement('span');
-            textSpan.className = 'result-name';
-            textSpan.textContent = name;
+                count++; 
+                if (count > 100) break; 
+            }
+        }
 
-            // 4. 클릭 이벤트
-            div.addEventListener('click', () => { 
-                selectCharacter(id, name, currentSlotIndex); 
-                modal.classList.add('hidden'); 
-            });
-
-            // 5. 요소 조립
-            div.appendChild(img);
-            div.appendChild(textSpan);
-            fragment.appendChild(div);
-
-            count++; 
-            if (count > 100) break; // 검색 결과 최대 100개 제한
+        if (!hasResult) {
+            searchResults.innerHTML = '<div style="padding:20px; color:#aaa; text-align:center;">검색 결과가 없습니다.</div>';
+        } else {
+            searchResults.appendChild(fragment);
         }
     }
 
-    // 결과가 없을 경우 메시지 표시
-    if (!hasResult) {
-        searchResults.innerHTML = '<div style="padding:20px; color:#aaa; text-align:center;">검색 결과가 없습니다.</div>';
-    } else {
-        searchResults.appendChild(fragment);
-    }
-}
     function selectCharacter(id, name, index, savedRole = '', shouldUpdateUI = true) {
-        // 기존 옵션 유지하거나 초기화
         const existingOptions = deckState[index]?.options || null;
         
         deckState[index] = { 
             id, name, 
             role: savedRole, 
-            options: existingOptions // 옵션 유지
+            options: existingOptions 
         };
         
         const slot = document.querySelector(`.char-slot[data-index="${index}"]`);
@@ -504,7 +541,6 @@ function renderSearchResults(keyword) {
             const description = descInput.value.trim();
             const userNickname = localStorage.getItem('userNickname');
 
-            // [수정] 유효성 검사 알림
             if (!userNickname) return notify('로그인 후 이용해주세요.', 'error');
             if (!title) return notify('덱 제목을 입력해주세요!', 'error');
             
@@ -514,7 +550,8 @@ function renderSearchResults(keyword) {
                 mainContent, 
                 subContent: editDeckId ? subInput.value : subEventName, 
                 characters: deckState, 
-                rounds: isRoundMode() ? roundState : [] 
+                rounds: isRoundMode() ? roundState : [],
+                tags: tags // ★ 태그 저장
             };
 
             try {
@@ -533,13 +570,11 @@ function renderSearchResults(keyword) {
                 const result = await response.json();
                 
                 if (response.ok) {
-                    // [수정] 성공 알림 및 페이지 이동
                     notify(editDeckId ? '수정되었습니다!' : '저장되었습니다!', 'success');
                     setTimeout(() => {
                         window.location.href = 'deck-share.html';
                     }, 1500);
                 } else { 
-                    // [수정] 실패 알림
                     notify('실패: ' + result.message, 'error'); 
                 }
             } catch (error) { 

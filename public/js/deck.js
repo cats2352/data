@@ -30,12 +30,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterMain = document.getElementById('filter-main-content');
     const filterSub = document.getElementById('filter-sub-content');
 
+    // 페이지네이션 요소
+    const paginationDiv = document.getElementById('pagination');
+
     let currentSort = 'latest'; // 현재 정렬
     let currentFilter = {};     // 현재 검색 필터
+    let currentPage = 1;        // ★ 현재 페이지
 
     // --- 초기 실행 ---
     initSubContentData(); // 세부 컨텐츠 데이터 세팅
-    loadDecks();          // 덱 목록 불러오기
+    loadDecks(1);         // 덱 목록 불러오기 (1페이지)
 
     // --- 이벤트 리스너 ---
 
@@ -71,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelector('.sort-options span.active').classList.remove('active');
             span.classList.add('active');
 
-            loadDecks(); // 정렬 변경 시 다시 로드
+            loadDecks(1); // 정렬 변경 시 1페이지부터 다시 로드
         });
     });
 
@@ -100,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 5. 검색 적용 버튼
     if (applySearchBtn) {
         applySearchBtn.addEventListener('click', () => {
-            // 필터 객체 생성
             currentFilter = {
                 title: filterTitle.value.trim(),
                 writer: filterWriter.value.trim(),
@@ -109,9 +112,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 mainContent: filterMain.value,
                 subContent: filterSub.value
             };
-            
-            toggleSidebar(false); // 창 닫기
-            loadDecks();          // 데이터 다시 로드
+            toggleSidebar(false);
+            loadDecks(1); // 검색 적용 시 1페이지부터
         });
     }
 
@@ -123,43 +125,50 @@ document.addEventListener('DOMContentLoaded', () => {
             filterDateStart.value = '';
             filterDateEnd.value = '';
             filterMain.value = '';
-            updateSubContentOptions(''); // 세부 목록 초기화
+            updateSubContentOptions('');
             
-            currentFilter = {}; // 필터 초기화
-            loadDecks();
+            currentFilter = {};
+            loadDecks(1); // 초기화 시 1페이지부터
         });
     }
 
     // --- 함수 정의 ---
 
-    // 덱 불러오기 (정렬 + 필터 적용)
-    async function loadDecks() {
+    // 덱 불러오기 (페이지네이션 적용)
+    async function loadDecks(page = 1) {
         const deckListContainer = document.getElementById('deck-list');
         const currentUser = localStorage.getItem('userNickname'); 
         
+        currentPage = page; // 현재 페이지 갱신
+
         // 쿼리 스트링 만들기
         const params = new URLSearchParams({
             sort: currentSort,
-            ...currentFilter // 검색 조건 펼치기
+            page: page,
+            limit: 10, // 10개씩 보기
+            ...currentFilter
         });
 
         try {
             const response = await fetch(`/api/decks?${params.toString()}`);
-            const decks = await response.json();
+            const data = await response.json(); // { decks: [], totalPages: 0, ... }
 
-            if (decks.length === 0) {
+            // 데이터 구조 변경에 따른 처리
+            const decks = data.decks; 
+            const totalPages = data.totalPages;
+
+            if (!decks || decks.length === 0) {
                 deckListContainer.innerHTML = `
                     <div class="empty-message">
                         <i class="fa-solid fa-box-open"></i>
                         <p>조건에 맞는 덱이 없습니다.</p>
                     </div>`;
-                // ★ [수정] 그리드 레이아웃 클래스 제거
                 deckListContainer.classList.remove('deck-list-layout'); 
+                if (paginationDiv) paginationDiv.innerHTML = ''; // 페이지네이션 숨김
                 return;
             }
 
             deckListContainer.innerHTML = '';
-            // ★ [수정] 리스트 레이아웃 클래스 추가
             deckListContainer.classList.add('deck-list-layout');
 
             decks.forEach(deck => {
@@ -167,46 +176,78 @@ document.addEventListener('DOMContentLoaded', () => {
                 deckListContainer.appendChild(item);
             });
 
+            // 페이지네이션 렌더링
+            renderPagination(data.currentPage, totalPages);
+
         } catch (error) {
             console.error('덱 로딩 실패:', error);
             deckListContainer.innerHTML = '<p class="empty-message">오류 발생</p>';
         }
     }
 
+    // ★ [추가] 페이지네이션 버튼 렌더링 함수
+    function renderPagination(current, total) {
+        if (!paginationDiv) return;
+        paginationDiv.innerHTML = '';
+        
+        if (total <= 1) return; // 1페이지뿐이면 버튼 안 보임
+
+        // 이전 버튼
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'page-btn';
+        prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+        prevBtn.disabled = current === 1;
+        prevBtn.onclick = () => {
+            if (current > 1) loadDecks(current - 1);
+        };
+        paginationDiv.appendChild(prevBtn);
+
+        // 페이지 번호 (최대 5개 표시 알고리즘)
+        let startPage = Math.max(1, current - 2);
+        let endPage = Math.min(total, startPage + 4);
+        
+        if (endPage - startPage < 4) {
+            startPage = Math.max(1, endPage - 4);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const btn = document.createElement('button');
+            btn.className = `page-btn ${i === current ? 'active' : ''}`;
+            btn.textContent = i;
+            btn.onclick = () => loadDecks(i);
+            paginationDiv.appendChild(btn);
+        }
+
+        // 다음 버튼
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'page-btn';
+        nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+        nextBtn.disabled = current === total;
+        nextBtn.onclick = () => {
+            if (current < total) loadDecks(current + 1);
+        };
+        paginationDiv.appendChild(nextBtn);
+    }
+
     // 세부 컨텐츠 옵션 업데이트
     function updateSubContentOptions(mainType) {
-        filterSub.innerHTML = '<option value="">전체</option>'; // 초기화
-        
+        filterSub.innerHTML = '<option value="">전체</option>'; 
         if (!mainType) {
             filterSub.disabled = true;
             return;
         }
-
-        // deck-select.js 와 동일한 데이터
         const subCategories = {
-            'pirate_festival': [
-                '해적페스티벌', 
-            ],
-            'kizuna': [
-                '준비중', 
-            ],
-            'treasure_map': [
-                '준비중',
-            ],
-            'coop': [
-                '준비중'
-            ],
-            'pirate_trail': [
-                'VS 키드', 
-                '준비중'
-            ]
+            'pirate_festival': ['해적페스티벌'],
+            'kizuna': ['준비중'],
+            'treasure_map': ['준비중'],
+            'coop': ['준비중'],
+            'pirate_trail': ['VS 키드', '준비중']
         };
-
         const list = subCategories[mainType];
         if (list) {
             list.forEach(item => {
                 const option = document.createElement('option');
-                option.value = item; // 저장할 때 이름 그대로 저장했으므로 value도 이름
+                option.value = item;
                 option.textContent = item;
                 filterSub.appendChild(option);
             });
@@ -216,14 +257,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function initSubContentData() {
-        // 초기화 시 필요한 로직이 있다면 여기에
-    }
+    function initSubContentData() { }
 
-    // ★ [수정] 리스트 아이템 HTML 생성 함수 (이미지 제거됨)
     function createDeckListItem(deck, currentUser) {
         const date = new Date(deck.createdAt).toLocaleDateString();
-        
         const contentNameMap = {
             'pirate_festival': '해적제', 'kizuna': '유대결전',
             'treasure_map': '트레저맵', 'coop': '공동전투',
@@ -235,20 +272,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const heartClass = isLiked ? 'fa-solid' : 'fa-regular';
         const activeClass = isLiked ? 'active' : '';
 
-        // 댓글 수 계산 로직
         let totalComments = 0;
         if (deck.comments && Array.isArray(deck.comments)) {
-            totalComments = deck.comments.length; // 댓글 수
+            totalComments = deck.comments.length; 
             deck.comments.forEach(c => {
-                if (c.replies) totalComments += c.replies.length; // 대댓글 수 합산
+                if (c.replies) totalComments += c.replies.length; 
             });
         }
 
-        // 관리자 여부 확인
         const isAdmin = localStorage.getItem('isAdmin') === 'true';
 
         let manageBtnHtml = '';
-        // 작성자 본인이거나, 관리자이면 관리 버튼 표시
         if (currentUser && (deck.writer === currentUser || isAdmin)) {
             manageBtnHtml = `
                 <div class="manage-btns">
@@ -257,17 +291,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         }
 
+        let tagsHtml = '';
+        if (deck.tags && deck.tags.length > 0) {
+            tagsHtml = `<div class="deck-tags-preview">`;
+            deck.tags.slice(0, 3).forEach(tag => {
+                tagsHtml += `<span class="preview-tag">#${tag}</span>`;
+            });
+            if (deck.tags.length > 3) tagsHtml += `<span class="preview-tag">+${deck.tags.length - 3}</span>`;
+            tagsHtml += `</div>`;
+        }
+
         const article = document.createElement('article');
-        article.className = 'deck-list-item'; // ★ 클래스 변경
+        article.className = 'deck-list-item'; 
         
-        // ★ [수정] HTML 구조 리스트형으로 변경
         article.innerHTML = `
             <div class="deck-item-left">
                 <div class="deck-badges">
                     <span class="badge-main">${korContentName}</span>
                     <span class="badge-sub">${deck.subContent}</span>
                 </div>
-                <h3 class="deck-title" title="${deck.title}">${deck.title}</h3>
+                <div class="deck-text-info">
+                    <h3 class="deck-title" title="${deck.title}">${deck.title}</h3>
+                    ${tagsHtml}
+                </div>
             </div>
             
             <div class="deck-item-right">
@@ -292,7 +338,6 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        // 이벤트 리스너 연결 (삭제, 수정, 좋아요, 상세보기)
         const delBtn = article.querySelector('.delete-btn');
         if (delBtn) {
             delBtn.addEventListener('click', async (e) => {
@@ -306,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     if (res.ok) {
                         notify('삭제되었습니다.', 'success');
-                        loadDecks();
+                        loadDecks(currentPage); // 현재 페이지 유지하며 리로드
                     } else {
                         const data = await res.json();
                         notify(data.message, 'error');

@@ -59,6 +59,14 @@
                     <textarea id="deck-description" placeholder="이 덱의 운영법이나 특징을 자유롭게 적어주세요. (예: 초반 버티기 후 필살기 사용)" rows="4"></textarea>
                 </div>
 
+                <div class="info-group">
+                    <label>태그 (Enter로 추가)</label>
+                    <div class="tag-input-container">
+                        <div id="tag-list" class="tag-list"></div>
+                        <input type="text" id="tag-input" placeholder="#태그 입력 (최대 5개)" maxlength="10">
+                    </div>
+                </div>
+
                 <div class="info-row">
                     <div class="info-group half">
                         <label>메인 컨텐츠</label>
@@ -89,7 +97,8 @@
             </section>
 
             <section class="role-desc-section">
-                <h2 class="section-title">캐릭터 역할 설명</h2> <div id="role-list" class="role-list">
+                <h2 class="section-title">캐릭터 역할 설명</h2>
+                <div id="role-list" class="role-list">
                     <div class="empty-role-msg">캐릭터를 선택하면 입력창이 나타납니다.</div>
                 </div>
             </section>
@@ -117,5 +126,6 @@
     </div>
 
     <script src="js/script.js"></script>
-    <script src="js/deck-write.js"></script> </body>
+    <script src="js/deck-write.js"></script>
+</body>
 </html>

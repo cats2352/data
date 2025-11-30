@@ -25,7 +25,11 @@ const deckSchema = new mongoose.Schema({
     mainContent: { type: String, required: true },
     subContent: { type: String, required: true },
     characters: { type: Array, required: true },
+    tags: { type: [String], default: [] },
     rounds: { type: Array, default: [] },
+    subContent: { type: String, required: true },
+    characters: { type: Array, required: true },
+
 
     likes: { type: Number, default: 0 },
     likedBy: { type: [String], default: [] },

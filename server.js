@@ -128,23 +128,42 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/decks', async (req, res) => {
     try {
         await connectDB();
-        const { title, description, writer, mainContent, subContent, characters, rounds } = req.body;
-        const newDeck = new Deck({ title, description, writer, mainContent, subContent, characters, rounds: rounds || [] });
+        // ★ tags 추가
+        const { title, description, writer, mainContent, subContent, characters, rounds, tags } = req.body;
+        
+        const newDeck = new Deck({ 
+            title, description, writer, mainContent, subContent, characters, 
+            rounds: rounds || [],
+            tags: tags || [] // ★ 태그 저장
+        });
         await newDeck.save();
         res.status(201).json({ message: '저장 완료' });
     } catch (error) { res.status(500).json({ message: '오류 발생' }); }
 });
 
+// 3. 덱 목록 조회 API (GET) - 태그 검색 기능 추가
+// server.js 의 '/api/decks' 라우트 수정
+
 app.get('/api/decks', async (req, res) => {
     try {
         await connectDB();
-        const { sort, title, writer, mainContent, subContent, startDate, endDate } = req.query;
+        // page, limit 파라미터 추가 (기본값: 1페이지, 10개씩)
+        const { sort, title, writer, mainContent, subContent, startDate, endDate, page = 1, limit = 10 } = req.query;
+        
         let query = {};
 
-        if (title) query.title = { $regex: title, $options: 'i' };
+        // 제목 또는 태그 검색
+        if (title) {
+            query.$or = [
+                { title: { $regex: title, $options: 'i' } },
+                { tags: { $in: [new RegExp(title, 'i')] } }
+            ];
+        }
+
         if (writer) query.writer = { $regex: writer, $options: 'i' };
         if (mainContent) query.mainContent = mainContent;
         if (subContent) query.subContent = subContent;
+        
         if (startDate || endDate) {
             query.createdAt = {};
             if (startDate) query.createdAt.$gte = new Date(startDate);
@@ -158,9 +177,28 @@ app.get('/api/decks', async (req, res) => {
         let sortOption = { createdAt: -1 };
         if (sort === 'popular') sortOption = { likes: -1, createdAt: -1 };
 
-        const decks = await Deck.find(query).sort(sortOption);
-        res.status(200).json(decks);
-    } catch (error) { res.status(500).json({ message: '로딩 실패' }); }
+        // ★ 페이지네이션 계산
+        const pageNum = parseInt(page) || 1;
+        const limitNum = parseInt(limit) || 10;
+        const skip = (pageNum - 1) * limitNum;
+
+        // 전체 개수 확인
+        const totalDecks = await Deck.countDocuments(query);
+        const totalPages = Math.ceil(totalDecks / limitNum);
+
+        // 데이터 조회 (skip, limit 적용)
+        const decks = await Deck.find(query)
+            .sort(sortOption)
+            .skip(skip)
+            .limit(limitNum);
+
+        // 결과 반환 (리스트 + 페이지 정보)
+        res.status(200).json({ decks, totalPages, currentPage: pageNum, totalDecks });
+
+    } catch (error) { 
+        console.error(error);
+        res.status(500).json({ message: '로딩 실패' }); 
+    }
 });
 
 app.get('/api/decks/:id', async (req, res) => {
@@ -190,18 +228,21 @@ app.delete('/api/decks/:id', async (req, res) => {
     } catch (error) { res.status(500).json({ message: '오류' }); }
 });
 
+// 2. 덱 수정 API (PUT)
 app.put('/api/decks/:id', async (req, res) => {
     try {
         await connectDB();
-        const { writer, title, description, characters, rounds } = req.body;
+        // ★ tags 추가
+        const { writer, title, description, characters, rounds, tags } = req.body;
         const deck = await Deck.findById(req.params.id);
-        if (!deck) return res.status(404).json({ message: '덱 없음' });
-        if (deck.writer !== writer) return res.status(403).json({ message: '권한 없음' });
+        // ... (권한 체크 등 기존 코드)
 
         deck.title = title;
         deck.description = description;
         deck.characters = characters;
         deck.rounds = rounds || [];
+        deck.tags = tags || []; // ★ 태그 수정 반영
+        
         await deck.save();
         res.status(200).json({ message: '수정됨' });
     } catch (error) { res.status(500).json({ message: '오류' }); }

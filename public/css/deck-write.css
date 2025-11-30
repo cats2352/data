@@ -270,6 +270,58 @@
 }
 .level-input { width: 60px; padding: 4px; border: none; background: transparent; color: var(--text-color); text-align: center; font-size: 1rem; }
 
+/* public/css/deck-write.css 맨 아래에 추가 */
+
+/* --- 태그 입력 스타일 --- */
+.tag-input-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--card-bg);
+}
+
+.tag-input-container:focus-within {
+    border-color: var(--accent-color);
+}
+
+#tag-input {
+    flex: 1;
+    min-width: 120px;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 6px;
+    color: var(--text-color);
+    font-size: 0.95rem;
+}
+
+/* 생성된 태그 (Chip) */
+.tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: rgba(88, 166, 255, 0.15); /* 파란색 틴트 */
+    color: #58a6ff;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    user-select: none;
+    animation: fadeIn 0.2s;
+}
+
+.tag-chip i {
+    cursor: pointer;
+    font-size: 0.8rem;
+    opacity: 0.7;
+    transition: 0.2s;
+}
+.tag-chip i:hover { opacity: 1; color: #ff6b6b; }
+
 /* PC 화면 대응 */
 @media (min-width: 769px) {
     .formation-group { flex-direction: row; align-items: center; }

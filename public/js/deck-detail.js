@@ -45,7 +45,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderDeckDetail(deck) {
         // --- 기본 정보 ---
         document.title = `${deck.title} - OPTC 커뮤니티`;
-        document.getElementById('detail-title').textContent = deck.title;
+        
+        // 제목
+        const titleEl = document.getElementById('detail-title');
+        titleEl.textContent = deck.title;
+
+        // ★ [추가] 태그 렌더링 (제목 아래)
+        const oldTags = document.getElementById('detail-tags');
+        if(oldTags) oldTags.remove(); // 중복 방지
+
+        if (deck.tags && deck.tags.length > 0) {
+            const tagContainer = document.createElement('div');
+            tagContainer.id = 'detail-tags';
+            tagContainer.className = 'tag-container';
+            
+            deck.tags.forEach(tag => {
+                const span = document.createElement('span');
+                span.className = 'view-tag';
+                span.textContent = `#${tag}`;
+                // 클릭 시 검색 페이지로 이동하려면 아래 주석 해제
+                // span.onclick = () => location.href = `deck-share.html?title=${encodeURIComponent(tag)}`;
+                tagContainer.appendChild(span);
+            });
+            
+            // 제목 요소 바로 뒤에 추가
+            titleEl.parentNode.insertBefore(tagContainer, titleEl.nextSibling);
+        }
+
         document.getElementById('detail-writer').innerHTML = `<i class="fa-solid fa-user"></i> ${deck.writer}`;
         document.getElementById('detail-date').innerHTML = `<i class="fa-regular fa-clock"></i> ${new Date(deck.createdAt).toLocaleDateString()}`;
         document.getElementById('detail-likes').innerHTML = `<i class="fa-solid fa-heart"></i> ${deck.likes}`;
@@ -383,7 +409,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         });
 
-        // 댓글 삭제 (성공/실패 메시지 notify로 변경)
+        // 댓글 삭제
         document.querySelectorAll('.delete-comment-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 if(!confirm('댓글을 삭제하시겠습니까?')) return;
@@ -405,7 +431,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         });
 
-        // 답글 삭제 (성공/실패 메시지 notify로 변경)
+        // 답글 삭제
         document.querySelectorAll('.delete-reply-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 if(!confirm('답글을 삭제하시겠습니까?')) return;
