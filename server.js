@@ -112,10 +112,13 @@ app.post('/api/login', async (req, res) => {
         if (!user) return res.status(400).json({ message: '존재하지 않는 닉네임입니다.' });
         if (user.password !== password) return res.status(400).json({ message: '비밀번호가 틀렸습니다.' });
 
-        // ★ [추가] 승인 여부 체크 (isApproved가 false면 로그인 차단)
         if (user.isApproved === false) {
             return res.status(403).json({ message: '관리자 승인 대기 중인 계정입니다.' });
         }
+
+        // ★ [추가] 로그인 성공 시 접속 시간 업데이트
+        user.lastLogin = new Date();
+        await user.save();
 
         res.status(200).json({ message: '로그인 성공!', nickname: user.nickname, isAdmin: user.isAdmin });
     } catch (error) { res.status(500).json({ message: '서버 오류' }); }
@@ -315,92 +318,111 @@ app.delete('/api/decks/:id/comments/:commentId/replies/:replyId', async (req, re
 // --- 유저 관리 API ---
 
 // 13. 사용자 목록 조회 API (검색 + 페이지네이션 + 승인여부 확인)
+// server.js (수정할 부분)
+
+// 13. 사용자 목록 조회 API (검색 + 정렬 + 페이지네이션 + 승인여부)
 app.get('/api/users', async (req, res) => {
     try {
         await connectDB();
         
-        // 쿼리 파라미터 받기
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 20; 
         const search = req.query.search || '';
+        const isApprovedParam = req.query.isApproved;
+        const sortBy = req.query.sort || 'latest'; // 정렬 기준 (기본값: 최신순)
 
-        // 검색 쿼리
-        const query = search ? { nickname: { $regex: search, $options: 'i' } } : {};
+        // 1. 기본 필터 조건 (검색어, 승인여부)
+        const matchStage = {};
+        if (search) {
+            matchStage.nickname = { $regex: search, $options: 'i' };
+        }
+        if (isApprovedParam !== undefined) {
+            matchStage.isApproved = (isApprovedParam === 'true');
+        }
 
-        // 1. 전체 유저 수
-        const totalUsers = await User.countDocuments(query);
-        const totalPages = Math.ceil(totalUsers / limit);
+        // 2. 정렬 조건 설정
+        let sortStage = {};
+        switch (sortBy) {
+            case 'decks': sortStage = { 'stats.deckCount': -1 }; break;
+            case 'likes': sortStage = { 'stats.totalLikes': -1 }; break;
+            case 'comments': sortStage = { 'stats.commentCount': -1 }; break;
+            
+            // ★ [추가] 최근 접속순 정렬
+            case 'active': sortStage = { lastLogin: -1 }; break;
 
-        // 2. 유저 목록 (isApproved 필드 포함)
-        const users = await User.find(query)
-            .sort({ createdAt: -1 }) // 가입일 최신순
-            .skip((page - 1) * limit)
-            .limit(limit)
-            .select('nickname isAdmin isApproved createdAt') // ★ isApproved 추가
-            .lean();
+            case 'oldest': sortStage = { createdAt: 1 }; break;
+            case 'latest': 
+            default: sortStage = { createdAt: -1 }; break;
+        }
 
-        // 닉네임 목록 추출
-        const targetNicknames = users.map(u => u.nickname);
-
-        // 3. 덱 통계 집계
-        const stats = await Deck.aggregate([
-            { $match: { writer: { $in: targetNicknames } } },
+        // 3. Aggregation 파이프라인 실행
+        const pipeline = [
+            { $match: matchStage },
+            // 유저와 작성한 덱을 조인 (Writer 이름 기준)
             {
-                $project: {
-                    writer: 1,
-                    likes: 1,
-                    commentCount: {
-                        $add: [
-                            { $size: "$comments" }, 
-                            { 
-                                $reduce: { 
-                                    input: "$comments",
-                                    initialValue: 0,
-                                    in: { $add: ["$$value", { $size: { $ifNull: ["$$this.replies", []] } }] }
+                $lookup: {
+                    from: 'decks',
+                    localField: 'nickname',
+                    foreignField: 'writer',
+                    as: 'userDecks'
+                }
+            },
+            // 통계 계산 (덱 수, 총 좋아요, 총 댓글 수)
+            {
+                $addFields: {
+                    'stats.deckCount': { $size: '$userDecks' },
+                    'stats.totalLikes': { $sum: '$userDecks.likes' },
+                    'stats.commentCount': {
+                        $sum: {
+                            $map: {
+                                input: '$userDecks',
+                                as: 'deck',
+                                in: {
+                                    $add: [
+                                        { $size: { $ifNull: ['$$deck.comments', []] } },
+                                        { 
+                                            $reduce: { 
+                                                input: { $ifNull: ['$$deck.comments', []] },
+                                                initialValue: 0,
+                                                in: { $add: ['$$value', { $size: { $ifNull: ['$$this.replies', []] } }] }
+                                            } 
+                                        }
+                                    ]
                                 }
                             }
-                        ]
+                        }
                     }
                 }
             },
+            // 필요한 필드만 남김 (데이터 최적화)
             {
-                $group: {
-                    _id: "$writer",
-                    deckCount: { $sum: 1 },
-                    totalLikes: { $sum: "$likes" },
-                    totalComments: { $sum: "$commentCount" }
+                $project: {
+                    userDecks: 0, // 덱 목록은 용량이 크니 제외
+                    password: 0   // 비밀번호 제외
+                }
+            },
+            // 정렬 적용
+            { $sort: sortStage },
+            // 페이징 및 카운트 (Facet 사용)
+            {
+                $facet: {
+                    metadata: [{ $count: "total" }],
+                    data: [{ $skip: (page - 1) * limit }, { $limit: limit }]
                 }
             }
-        ]);
+        ];
 
-        // 4. 통계 맵핑
-        const statsMap = {};
-        stats.forEach(stat => {
-            statsMap[stat._id] = stat;
-        });
-
-        // 5. 최종 데이터 조립
-        const userList = users.map(user => {
-            const stat = statsMap[user.nickname] || { deckCount: 0, totalLikes: 0, totalComments: 0 };
-            return {
-                _id: user._id,
-                nickname: user.nickname,
-                isAdmin: user.isAdmin,
-                isApproved: user.isApproved, // ★ 승인 상태 전달
-                createdAt: user.createdAt,
-                stats: {
-                    deckCount: stat.deckCount,
-                    totalLikes: stat.totalLikes,
-                    commentCount: stat.totalComments
-                }
-            };
-        });
+        const result = await User.aggregate(pipeline);
+        
+        const users = result[0].data;
+        const totalUsers = result[0].metadata[0] ? result[0].metadata[0].total : 0;
+        const totalPages = Math.ceil(totalUsers / limit);
 
         res.status(200).json({
-            users: userList,
+            users,
             currentPage: page,
-            totalPages: totalPages,
-            totalUsers: totalUsers
+            totalPages,
+            totalUsers
         });
 
     } catch (error) {

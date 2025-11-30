@@ -44,20 +44,53 @@
                 <button id="user-search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>
 
+            <div id="pending-list-section" class="hidden">
+                <h3 class="section-title pending">
+                    <i class="fa-solid fa-user-clock"></i> 가입 승인 대기
+                </h3>
+                <div class="table-container">
+                    <table class="user-table">
+                        <thead>
+                            <tr>
+                                <th>닉네임</th>
+                                <th>가입일</th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pending-table-body">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h3 class="section-title">
+                <i class="fa-solid fa-user-check"></i> 정회원 목록
+            </h3>
             <div class="table-container">
                 <table class="user-table">
                     <thead>
                         <tr>
                             <th>닉네임</th>
-                            <th>덱 작성</th>
-                            <th>받은 좋아요</th>
-                            <th>댓글 수</th>
-                            <th>가입일</th>
+                            <th class="sortable" data-sort="decks">
+                                덱 작성 <i class="fa-solid fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-sort="likes">
+                                받은 좋아요 <i class="fa-solid fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-sort="comments">
+                                댓글 수 <i class="fa-solid fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-sort="active">
+                                최근 접속 <i class="fa-solid fa-sort"></i>
+                            </th>
+                            <th class="sortable active" data-sort="latest">
+                                가입일 <i class="fa-solid fa-sort-down"></i>
+                            </th>
                             <th class="admin-col hidden">관리</th> 
                         </tr>
                     </thead>
                     <tbody id="user-table-body">
-                        <tr><td colspan="6" style="text-align:center;">로딩 중...</td></tr>
+                        <tr><td colspan="7" style="text-align:center;">로딩 중...</td></tr>
                     </tbody>
                 </table>
             </div>

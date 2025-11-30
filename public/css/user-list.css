@@ -148,3 +148,66 @@
     opacity: 0.5;
     cursor: default;
 }
+
+/* --- [추가] 섹션 타이틀 스타일 --- */
+.section-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--text-color);
+    margin: 30px 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 승인 대기 섹션 강조 */
+.section-title.pending {
+    color: #ff5722;
+    border-bottom-color: #ff5722;
+}
+
+/* --- [추가] 상태 배지 스타일 (team.css와 통일감 있게) --- */
+.status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+/* 승인 대기 배지 (빨강) */
+.status-badge.pending {
+    background-color: rgba(244, 67, 54, 0.1);
+    color: #f44336;
+    border: 1px solid #f44336;
+}
+
+/* 관리자 배지 (보라) */
+.status-badge.admin {
+    background-color: var(--accent-color);
+    color: white;
+    border: 1px solid var(--accent-color);
+}
+
+/* 정렬 가능한 헤더 스타일 */
+th.sortable {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+th.sortable:hover {
+    background-color: var(--btn-hover);
+    color: var(--text-color);
+}
+th.sortable i {
+    margin-left: 5px;
+    font-size: 0.8rem;
+    opacity: 0.5;
+}
+th.sortable.active i {
+    opacity: 1;
+    color: var(--accent-color);
+}

@@ -1,6 +1,5 @@
 // -----------------------------------------------------------
 // ★ [안전장치] 알림 함수 정의
-// 전역 함수들(editUser 등)에서도 쓸 수 있도록 최상단에 정의합니다.
 // -----------------------------------------------------------
 const notify = (message, type = 'info') => {
     if (typeof showToast === 'function') {
@@ -16,100 +15,192 @@ document.addEventListener('DOMContentLoaded', async () => {
     const searchInput = document.getElementById('user-search-input');
     const searchBtn = document.getElementById('user-search-btn');
     
+    // 승인 대기자 관련 요소
+    const pendingSection = document.getElementById('pending-list-section');
+    const pendingTableBody = document.getElementById('pending-table-body');
+
     const currentUser = localStorage.getItem('userNickname');
+    const isAdmin = localStorage.getItem('isAdmin') === 'true';
+    
     let currentPage = 1;
     let currentSearch = '';
+    let currentSort = 'latest'; // 기본 정렬: 최신 가입순
 
-    // --- 1. 유저 목록 불러오기 함수 ---
-    async function loadUsers(page, search) {
+    // --- 초기 실행 ---
+    if (isAdmin) {
+        // 관리자라면 정회원 테이블의 '관리' 컬럼 헤더 보이기
+        const adminCols = document.querySelectorAll('.admin-col');
+        adminCols.forEach(col => col.classList.remove('hidden'));
+        
+        // 승인 대기자 목록 불러오기
+        loadPendingUsers();
+    }
+    
+    // 정회원 목록 불러오기 (초기 로드)
+    loadApprovedUsers(currentPage, currentSearch);
+
+    // --- [이벤트] 정렬 헤더 클릭 ---
+    document.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const sortType = th.dataset.sort;
+
+            // '가입일(latest)'인 경우만 토글(최신<->오래된), 나머지는 해당 기준 내림차순 고정
+            if (sortType === 'latest') {
+                currentSort = (currentSort === 'latest') ? 'oldest' : 'latest';
+            } else {
+                currentSort = sortType;
+            }
+
+            // 아이콘 및 active 스타일 업데이트
+            updateSortIcons(th);
+            
+            // 데이터 다시 로드 (페이지 1로 초기화하지 않음)
+            loadApprovedUsers(currentPage, currentSearch);
+        });
+    });
+
+    function updateSortIcons(clickedTh) {
+        // 1. 모든 헤더 초기화
+        document.querySelectorAll('th.sortable').forEach(th => {
+            th.classList.remove('active');
+            const icon = th.querySelector('i');
+            // 아이콘 초기화 (기본값)
+            if (icon) icon.className = 'fa-solid fa-sort'; 
+        });
+
+        // 2. 클릭된 헤더 활성화
+        clickedTh.classList.add('active');
+        const icon = clickedTh.querySelector('i');
+
+        // 3. 정렬 상태에 따른 아이콘 변경
+        if (currentSort === 'oldest') {
+            icon.className = 'fa-solid fa-sort-up'; // 오름차순 (오래된 순)
+        } else {
+            icon.className = 'fa-solid fa-sort-down'; // 내림차순 (최신/많은 순)
+        }
+    }
+
+    // --- [헬퍼] 상대 시간 계산 함수 ---
+    const timeAgo = (dateStr) => {
+        if (!dateStr) return '-';
+        const now = new Date();
+        const past = new Date(dateStr);
+        const diff = (now - past) / 1000; // 초 단위
+
+        if (diff < 60) return '방금 전';
+        if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+        if (diff < 604800) return `${Math.floor(diff / 86400)}일 전`;
+        return past.toLocaleDateString(); // 7일 넘으면 날짜 표시
+    };
+
+    // --- 1. [관리자용] 승인 대기자 목록 불러오기 ---
+    async function loadPendingUsers() {
         try {
-            // API 호출
-            const response = await fetch(`/api/users?page=${page}&limit=20&search=${encodeURIComponent(search)}`);
+            // isApproved=false 인 유저만 조회 (최대 100명)
+            const response = await fetch(`/api/users?isApproved=false&limit=100`);
+            const data = await response.json();
+            const pendingUsers = data.users;
+
+            if (pendingUsers && pendingUsers.length > 0) {
+                pendingSection.classList.remove('hidden');
+                pendingTableBody.innerHTML = '';
+
+                pendingUsers.forEach(user => {
+                    const date = new Date(user.createdAt).toLocaleDateString();
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>
+                            <i class="fa-solid fa-user-clock" style="color:#ff5722;"></i> ${user.nickname}
+                            <span class="status-badge pending">승인대기</span>
+                        </td>
+                        <td>${date}</td>
+                        <td>
+                            <div class="manage-btn-group">
+                                <button class="admin-btn" style="background-color:#4caf50;" onclick="approveUser('${user._id}', '${user.nickname}')">승인</button>
+                                <button class="admin-btn" style="background-color:#f44336;" onclick="rejectUser('${user._id}', '${user.nickname}')">거절</button>
+                            </div>
+                        </td>
+                    `;
+                    pendingTableBody.appendChild(tr);
+                });
+            } else {
+                pendingSection.classList.add('hidden');
+            }
+        } catch (err) {
+            console.error('승인 대기자 로딩 실패:', err);
+        }
+    }
+
+    // --- 2. [공통] 정회원 목록 불러오기 ---
+    async function loadApprovedUsers(page, search) {
+        try {
+            // API 호출 (isApproved=true, 정렬, 검색 포함)
+            const url = `/api/users?page=${page}&limit=20&isApproved=true&search=${encodeURIComponent(search)}&sort=${currentSort}`;
+            const response = await fetch(url);
             const data = await response.json();
             
             const users = data.users; 
             const totalPages = data.totalPages;
 
-            // 관리자 확인
-            const isAdmin = localStorage.getItem('isAdmin') === 'true';
-
-            if (isAdmin) {
-                const adminCol = document.querySelector('.admin-col');
-                if(adminCol) adminCol.classList.remove('hidden');
-            }
-
-            // 테이블 비우기
             tableBody.innerHTML = '';
 
             if (!users || users.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">검색 결과가 없습니다.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">검색 결과가 없습니다.</td></tr>';
                 paginationDiv.innerHTML = '';
                 return;
             }
 
-            // 테이블 렌더링
             users.forEach(user => {
                 const date = new Date(user.createdAt).toLocaleDateString();
+                const lastActive = timeAgo(user.lastLogin); // 최근 접속일 변환
+
                 const tr = document.createElement('tr');
                 
-                const adminBadge = user.isAdmin ? '<span class="admin-badge">ADMIN</span>' : '';
-
-                // 승인 대기 배지 (isApproved가 false일 때만)
-                const pendingBadge = (user.isApproved === false) 
-                    ? '<span class="status-badge closed" style="margin-left:5px; font-size:0.7rem; color:#f44336; border:1px solid #f44336; padding:2px 6px; border-radius:4px;">승인대기</span>' 
-                    : '';
-
-                let adminBtns = '';
+                // 관리자 배지
+                const adminBadge = user.isAdmin ? '<span class="status-badge admin">ADMIN</span>' : '';
                 
+                // 관리 버튼 (관리자이고 본인이 아닐 때)
+                let adminBtns = '';
                 if (isAdmin && user.nickname !== currentUser) {
-                    // 승인 여부에 따라 버튼 분기 처리
-                    if (user.isApproved === false) {
-                        // 1) 승인 대기 상태: 승인 / 거절 버튼 노출
-                        adminBtns = `
-                            <div class="manage-btn-group">
-                                <button class="admin-btn" style="background-color:#4caf50;" onclick="approveUser('${user._id}', '${user.nickname}')">가입승인</button>
-                                <button class="admin-btn" style="background-color:#f44336;" onclick="rejectUser('${user._id}', '${user.nickname}')">거절</button>
-                            </div>
-                        `;
-                    } else {
-                        // 2) 승인 완료 상태: 수정 / 추방 버튼 노출
-                        adminBtns = `
-                            <div class="manage-btn-group">
-                                <button class="admin-btn edit-user-btn" onclick="editUser('${user._id}', '${user.nickname}')">수정</button>
-                                <button class="admin-btn del-user-btn" onclick="deleteUser('${user._id}', '${user.nickname}')">추방</button>
-                            </div>
-                        `;
-                    }
+                    adminBtns = `
+                        <div class="manage-btn-group">
+                            <button class="admin-btn edit-user-btn" onclick="editUser('${user._id}', '${user.nickname}')">수정</button>
+                            <button class="admin-btn del-user-btn" onclick="deleteUser('${user._id}', '${user.nickname}')">추방</button>
+                        </div>
+                    `;
                 } else if (isAdmin) {
                     adminBtns = '<span style="color:#888; font-size:0.8rem;">본인</span>';
                 }
 
+                // 관리자 컬럼
+                const adminTd = isAdmin ? `<td>${adminBtns}</td>` : '';
+
                 tr.innerHTML = `
                     <td>
-                        <i class="fa-solid fa-user-circle"></i> ${user.nickname} ${adminBadge} ${pendingBadge}
+                        <i class="fa-solid fa-user-circle"></i> ${user.nickname} ${adminBadge}
                     </td>
                     <td>${user.stats.deckCount}회</td>
                     <td>${user.stats.totalLikes}개</td>
                     <td>${user.stats.commentCount}개</td>
+                    <td style="color:var(--accent-color); font-size:0.9rem; font-weight:500;">${lastActive}</td>
                     <td>${date}</td>
-                    ${isAdmin ? `<td>${adminBtns}</td>` : ''} 
+                    ${adminTd}
                 `;
                 tableBody.appendChild(tr);
             });
 
-            // 페이지네이션 렌더링
             renderPagination(data.currentPage, totalPages);
 
         } catch (err) {
             console.error(err);
-            tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">데이터 로딩 실패</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">데이터 로딩 실패</td></tr>';
         }
     }
 
-    // --- 2. 페이지네이션 버튼 생성 함수 ---
+    // --- 3. 페이지네이션 버튼 생성 함수 ---
     function renderPagination(current, total) {
         paginationDiv.innerHTML = '';
-        
         if (total <= 1) return;
 
         // 이전 버튼
@@ -120,18 +211,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         prevBtn.onclick = () => {
             if (current > 1) {
                 currentPage--;
-                loadUsers(currentPage, currentSearch);
+                loadApprovedUsers(currentPage, currentSearch);
             }
         };
         paginationDiv.appendChild(prevBtn);
 
-        // 페이지 번호
+        // 페이지 번호 (최대 5개)
         let startPage = Math.max(1, current - 2);
         let endPage = Math.min(total, startPage + 4);
-        
-        if (endPage - startPage < 4) {
-            startPage = Math.max(1, endPage - 4);
-        }
+        if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
 
         for (let i = startPage; i <= endPage; i++) {
             const btn = document.createElement('button');
@@ -139,7 +227,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             btn.textContent = i;
             btn.onclick = () => {
                 currentPage = i;
-                loadUsers(currentPage, currentSearch);
+                loadApprovedUsers(currentPage, currentSearch);
             };
             paginationDiv.appendChild(btn);
         }
@@ -152,31 +240,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         nextBtn.onclick = () => {
             if (current < total) {
                 currentPage++;
-                loadUsers(currentPage, currentSearch);
+                loadApprovedUsers(currentPage, currentSearch);
             }
         };
         paginationDiv.appendChild(nextBtn);
     }
 
-    // --- 3. 검색 이벤트 ---
+    // --- 4. 검색 이벤트 ---
     if (searchBtn && searchInput) {
-        searchBtn.addEventListener('click', () => {
+        const handleSearch = () => {
             currentSearch = searchInput.value.trim();
-            currentPage = 1;
-            loadUsers(currentPage, currentSearch);
-        });
+            currentPage = 1; // 검색 시 1페이지로 초기화
+            loadApprovedUsers(currentPage, currentSearch);
+        };
 
+        searchBtn.addEventListener('click', handleSearch);
         searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                currentSearch = searchInput.value.trim();
-                currentPage = 1;
-                loadUsers(currentPage, currentSearch);
-            }
+            if (e.key === 'Enter') handleSearch();
         });
     }
-
-    // 초기 로드
-    loadUsers(currentPage, currentSearch);
 });
 
 // --- 전역 함수들 (관리자 기능) ---
@@ -201,7 +283,7 @@ window.editUser = async (id, oldName) => {
     }
 };
 
-// 2. 유저 추방 (기존 회원 삭제)
+// 2. 유저 추방 (완전 삭제)
 window.deleteUser = async (id, name) => {
     if (confirm(`정말 '${name}' 회원을 추방하시겠습니까?\n작성한 덱도 모두 삭제됩니다.`)) {
         try {
@@ -234,7 +316,7 @@ window.approveUser = async (id, name) => {
     }
 };
 
-// 4. 가입 거절 (가입 대기자 삭제)
+// 4. 가입 거절
 window.rejectUser = async (id, name) => {
     if (confirm(`'${name}' 님의 가입 요청을 거절(삭제)하시겠습니까?`)) {
         try {
